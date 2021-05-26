@@ -5,7 +5,8 @@
 @Author  :   Daniel-ChenJH
 @Email   :   13760280318@163.com
 @Version    :   2.0
-@Descriptions :   上海交通大学全自动抢课脚本,请保证已经安装了最新版本的Chrome浏览器（90.0.4430系列版本）
+@Descriptions :   Course-Bullying-in-SJTU
+                    上海交通大学全自动抢课脚本,请保证已经安装了最新版本的Chrome浏览器（90.0.4430系列版本）
                     本程序支持准点开抢与抢课已经开始后持续捡漏两种模式。
 '''
 
@@ -44,6 +45,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
 
     option = webdriver.ChromeOptions()
 
+    # 无头模式；采用有头模式时将bili调成当前电脑屏幕的缩放比例（1、1.25、1.5或2），并注释掉50~52行
     bili=1
     option.add_argument('--headless')
     option.add_argument('--no-sandbox')
@@ -121,6 +123,9 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                 driver.switch_to.default_content()
             if count>=10:
                 print('\n大概率是您的jaccount信息输入错误，请检查并修改后重试...')
+                print("\nPlease 'Star' the program of Daniel-ChenJH on Github if you think it's a quite good one. ")
+                print('\nLink to \'Course-Bullying-in-SJTU\' in Github : https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU')
+
                 my_file = 'button.png' # 文件路径
                 if path.exists(my_file): # 如果文件存在
                     remove(my_file) # 则删除
@@ -280,17 +285,17 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
         remove(my_file) # 则删除
     
     print("\nPlease 'Star' the program of Daniel-ChenJH on Github if you think it's a quite good one. ")
+    print('\nLink to \'Course-Bullying-in-SJTU\' in Github : https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU')
     input('\n程序已完成！请立即自行移步至教学信息服务网 i.sjtu.edu.cn 查询确认抢课结果！\n\n回车键退出程序……')
     driver.quit()
 
 
 if __name__ == '__main__':
-    
-    sys.stdout = Logger("qiangke_log_file.txt")
-    #会同时在控制台输出和写入“log_file.txt”文件中
 
-    # print("\nOn-Time Automatic Class Snatching System\n\nAuthor:\t@Daniel-ChenJH (email address: 13760280318@163.com)\nFirst Published on Februry 25th, 2021.\n\nThe program can only be run in a Windows x86_64 computer, and is written based on the current structure of the website https://i.sjtu.edu.cn， known as the website for students to deal with their personal stuffs, including choosing classes to attend in the coming semester.\nHowever, you should only use it when the time is permitted for choosing classes, otherwise this program may not work and throw out errors.\nBy using this program, you will be able to choose the designated courses immediately.\nIf the class you wanna choose is currently full, the program can keep refreshing the website page and check if the class is available at a speed of 1 to 2 times per second, until the class is have remaining quota, and once this happens, the program will immediately choose this class.\nYou probably don't need to type in the captcha in order to login! That's so cool!\nNotice that don't use this program too often, for your schoolmates may be angry at you for you can nearly choose all the classes that you want.\n******Reminder: The author(@Daniel-ChenJH) has takes no responsibility for any usage of the program by the potential users.\nAt least now I know that the school won't ban the IP or Jaccount that keep refreshing the page in a short period of time, so you can feel at ease while using it.\nFor any usage problems or discussions, feel free to contact 13760280318@163.com.\n\nUsage: \n1. Unzip the zip file;\n2. Make sure that you own the latest version of Chrome Browser(series of 88.0) on your computer. You can check your version by visiting chrome://settings/help.\n3. Edit the file \"account.txt\" in the unzipped file in the following steps.\n4. Change the second line into the time you want the program to check your class before exiting (if you cannot choose the class finally). You can keep it running by setting this value so big, but remember to give it an integer.\n5. Change the third line into your Jaccount username, and fourth line into your Jaccount password.\n6. Add classes you wanna choose in the following lines, remember !!! one class and its category per line! Classname, teacher's name or course number is all ok to be written here, and you only need to write one message about a class. However, I strongly suggest you write the course number here, which leads to the most accurate information of the course.\n7. If you have multiple classes you wanna choose, just type in them and their categories in the following lines. However, too many courses may lead to a decline in the efficiency of the program. You'd better write no more than four classes here.\n8. Although the program won't quit the class that you have chosen, I still strongly suggest you to make sure there is no time conflict in your expected class schedule.\nHere is a good example of file 'account.txt' :\n\n1000\nyour_jaccount_id_here\nyour_jaccount_password_here\n物理化学，交叉课程\n数据可视化，交叉课程\n离散数学，任选课程\n\n\n")
-    print("\n\nOn-Time Automatic Class Snatching System\n\nAuthor:\t@Daniel-ChenJH (email address: 13760280318@163.com)\nFirst Published on Februry 25th, 2021 , revised for v2.0 on May 24th, 2021.\n")
+    #会同时在控制台输出和写入“log_file.txt”文件中
+    sys.stdout = Logger("qiangke_log_file.txt")
+
+    print("\n\nCourse-Bullying-in-SJTU: an On-Time Automatic Class Snatching System\n\nAuthor:\t@Daniel-ChenJH (email address: 13760280318@163.com)\nFirst Published on Februry 25th, 2021 , revised for v2.0 on May 24th, 2021.\n")
     print('\nPlease read file \'readme.txt\' carefully and then edit file \'account.txt\' before running the program!!!\n')
     now_time = datetime.datetime.now()
     print('Starting progress in ',now_time.strftime('%Y-%m-%d %H:%M:%S'),' :\n====================================\n')
