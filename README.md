@@ -84,6 +84,7 @@ your_jaccount_password_here
 # 鼓励
 
 如果您觉得Daniel-ChenJH的程序不错，请在Github上点亮“star”以给他一点鼓励。
+项目链接：https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU
 
 祝君好运!
 
