@@ -70,10 +70,14 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
     while(flag):
         try:
             name=driver.find_element_by_xpath('//*[@id="user"]')
+            name.clear()
             name.send_keys(account_name)
             password=driver.find_element_by_xpath('//*[@id="pass"]')
+            password.clear()
             password.send_keys(account_password)
+            
             if flag2:       #如果pytesseract没有问题
+                
                 captcha=driver.find_element_by_xpath('//*[@id="captcha-img"]')
                 photoname='button.png'
                 driver.save_screenshot(photoname)
@@ -100,6 +104,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                 captcha.send_keys(str(cap.strip()))
             else:
                 captcha=driver.find_element_by_xpath('//*[@id="captcha"]')
+                captcha.clear()
                 captcha.send_keys(hand_cap.strip())
             driver.find_element_by_xpath('//*[@id="submit-button"]').click()
             driver.switch_to.default_content()
@@ -107,8 +112,9 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
             flag=False
             print('登录成功！\n')
         except TesseractNotFoundError:
-            print('There is something wrong with your tesseract, please type in the captcha": ')
-            hand_cap=input('')
+            print('There is something wrong with your tesseract')
+            print('The captcha can be seen from file: \'button.png\', please type in the captcha: ')
+            hand_cap=input('hand_cap=')
             flag2=False
         except NoSuchElementException:
             print('\n验证码自动识别错误或jaccount信息输入错误，正在尝试第'+str(count+1)+'次...')
@@ -173,7 +179,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
             # 此时已经进入选课界面
             for handle in all_window_handles:
                 if handle !=origin:
-                    stat[handle]=[False,k]
+                    stat[handle]=[0,k]
                     driver.switch_to.window(handle)
                     driver.implicitly_wait(2)
                     inp=driver.find_element_by_xpath('//*[@id="searchBox"]/div/div[1]/div/div/div/div/input')
@@ -198,7 +204,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
 
                 for t in range(len(temp)):
                     st.append(temp[t][0])
-                if False not in st:break    #所有课程都抢课完成
+                if 0 not in st:break    #所有课程都抢课完成
 
                 for handle in all_window_handles:
                     if handle!=origin and not stat[handle][0]:
@@ -248,11 +254,17 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                                     try:
                                         if temp2.text=='退选': 
                                             print('\n================================',str(kechengs[stat[handle][1]]),', Success!',strftime("%Y-%m-%d %H:%M:%S", localtime()),'try_time=='+str(q+1),'========================\n')
-                                        else:print('\n好像抢课程：',str(kechengs[stat[handle][1]]),'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
-                                    except:print('\n好像抢课程：',str(kechengs[stat[handle][1]]),'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
-                                else :print('你已经选上这门课了！'+str(kechengs[stat[handle][1]]))
+                                            stat[handle][0]=1
+                                        else:
+                                            print('\n好像抢课程：',str(kechengs[stat[handle][1]]),'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
+                                            stat[handle][0]=3
+                                    except:
+                                        print('\n好像抢课程：',str(kechengs[stat[handle][1]]),'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
+                                        stat[handle][0]=3
+                                else :
+                                    print('你已经选上这门课了！'+str(kechengs[stat[handle][1]]))
+                                    stat[handle][0]=2
                                 all_window_handles=driver.window_handles
-                                stat[handle][0]=True
                             except Exception as e:
                                 print(strftime("%Y-%m-%d %H:%M:%S", localtime()),str(kechengs[stat[handle][1]]),'try_time=='+str(q+1),'failed',status.text)
                                 print('failed because of :',e,' Retrying!')
@@ -273,9 +285,14 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
     if failcount==20:print('\n好像出了些什么问题,也可能是网站服务器问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
     print('\nended!\n抢课结果:\n')
     for k in range(len(kechengs)):
-        if stat[all_window_handles[k+1]][0]:
-            print(kechengs[k],'success!')
-        else:print(kechengs[k],'failed!')
+        if stat[all_window_handles[k+1]][0]==1:
+            print(kechengs[k],'成功，程序成功抢课!')
+        elif stat[all_window_handles[k+1]][0]==2:
+            print(kechengs[k],'成功，你之前已经选好这门课了!')
+        elif stat[all_window_handles[k+1]][0]==3:
+            print(kechengs[k],'失败，抢课中遇到了一些问题，请自行尝试抢这门课!')
+        elif stat[all_window_handles[k+1]][0]==0:
+            print(kechengs[k],'失败，直到程序终止都没能抢到此门课!')    
     end_time=strftime("%Y-%m-%d %H:%M:%S", localtime())
     print('\nStart time: ',start_time)
     print('End time: ',end_time)
@@ -313,6 +330,11 @@ if __name__ == '__main__':
     account_name=data[3].strip()
     account_password=data[4].strip()
     dataline=5
+
+    # 提升修改jaccount信息
+    if account_name=='your_jaccount_id_here' or account_password=='your_jaccount_password_here':
+        print('请先修改jaccount信息，再运行程序！')
+        sys.exit(0)
 
     kechengs=[]
     class_type=[]
