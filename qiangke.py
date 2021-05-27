@@ -25,6 +25,16 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import datetime
 import sys
+import signal
+
+# 检测程序异常终止
+def signal_handling(signum,frame):
+    print('\n')
+    print('******************************')
+    print ("程序被使用者终止。")    
+    print('******************************')
+    print('\n')
+    sys.exit()
 
 # 将输出同时写入到log文件
 class Logger(object):
@@ -33,8 +43,12 @@ class Logger(object):
         self.log = open(fileN, "a+",encoding='utf-8')
  
     def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
+        if message=='\n' or message[0:5]=='\n====':
+            self.terminal.write(message)
+            self.log.write(message)
+        else:
+            self.terminal.write('['+datetime.datetime.now().strftime('%H:%M:%S')+'] '+message)
+            self.log.write('['+datetime.datetime.now().strftime('%H:%M:%S')+'] '+message)
         self.flush() #每次写入后刷新到文件中，防止程序意外结束
     def flush(self):
         self.log.flush()
@@ -117,17 +131,17 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
             hand_cap=input('hand_cap=')
             flag2=False
         except NoSuchElementException:
-            print('\n验证码自动识别错误或jaccount信息输入错误，正在尝试第'+str(count+1)+'次...')
+            print('验证码自动识别错误或jaccount信息输入错误，正在尝试第'+str(count+1)+'次...')
             count+=1
             if count%3==0:
+                driver.refresh()
                 try:
-                    driver.refresh()
-                    sleep(3)
+                    captcha = WebDriverWait(driver,3,0.1).until(lambda x:driver.find_element_by_xpath('//*[@id="captcha"]'))
                 except TimeoutException:
                     driver.execute_script('window.stop()')
 
                 driver.switch_to.default_content()
-            if count>=10:
+            if count>=12:
                 print('\n大概率是您的jaccount信息输入错误，请检查并修改后重试...')
                 print("\nPlease 'Star' the program of Daniel-ChenJH on Github if you think it's a quite good one. ")
                 print('\nLink to \'Course-Bullying-in-SJTU\' in Github : https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU')
@@ -150,11 +164,11 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
     
     # 准点开抢模式，阻塞程序
     if mode==1:
-        print('抢课开始时间设定为：',on_time)
+        print('抢课开始时间设定为：'+on_time.strftime('%Y-%m-%d %H:%M:%S'))
         while True:
             now_time=datetime.datetime.now()
             if now_time<on_time and int((on_time-now_time).seconds)>2:
-                print('未到抢课开放时间，当前时间为',now_time.strftime('%Y-%m-%d %H:%M:%S'),'程序等待中')
+                print('未到抢课开放时间，程序等待中')
                 if int((on_time-now_time).seconds)>60:
                     sleep(60) 
                 elif int((on_time-now_time).seconds)>10:
@@ -162,7 +176,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                 else:sleep(2)     
             else:
                 if now_time>=on_time:break   
-        print('当前时间为',datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),'程序开始抢课！\n')
+        print('程序开始抢课！\n')
 
     failcount=0
     # 点击下拉栏尝试进入选课页面
@@ -241,7 +255,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                         status=driver.find_element_by_xpath('//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td['+str(rongliang)+']')
                         if status.is_displayed():
                             # 显示已满
-                            print(strftime("%Y-%m-%d %H:%M:%S", localtime()),str(kechengs[stat[handle][1]]),'try_time=='+str(q+1),'failed',status.text)
+                            print(strftime("%Y-%m-%d %H:%M:%S",localtime())+str(kechengs[stat[handle][1]])+'try_time=='+str(q+1)+'failed'+status.text)
                             go=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div/div/div/span/button[1]')
                             go.click()
                         else:
@@ -253,25 +267,25 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                                     temp2=WebDriverWait(driver,1, 0.05).until(lambda driver: driver.find_element_by_xpath('//*[@id="contentBox"]//button'))
                                     try:
                                         if temp2.text=='退选': 
-                                            print('\n================================',str(kechengs[stat[handle][1]]),', Success!',strftime("%Y-%m-%d %H:%M:%S", localtime()),'try_time=='+str(q+1),'========================\n')
+                                            print('================================'+str(kechengs[stat[handle][1]]),', Success!'+strftime("%Y-%m-%d %H:%M:%S", localtime())+'try_time=='+str(q+1)+'========================\n')
                                             stat[handle][0]=1
                                         else:
-                                            print('\n好像抢课程：',str(kechengs[stat[handle][1]]),'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
+                                            print('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
                                             stat[handle][0]=3
                                     except:
-                                        print('\n好像抢课程：',str(kechengs[stat[handle][1]]),'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
+                                        print('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
                                         stat[handle][0]=3
                                 else :
                                     print('你已经选上这门课了！'+str(kechengs[stat[handle][1]]))
                                     stat[handle][0]=2
                                 all_window_handles=driver.window_handles
                             except Exception as e:
-                                print(strftime("%Y-%m-%d %H:%M:%S", localtime()),str(kechengs[stat[handle][1]]),'try_time=='+str(q+1),'failed',status.text)
-                                print('failed because of :',e,' Retrying!')
+                                print(strftime("%Y-%m-%d %H:%M:%S", localtime())+str(kechengs[stat[handle][1]])+'try_time=='+str(q+1)+'failed',status.text)
+                                print('failed because of :'+str(e)+' Retrying!')
             if False not in st:break
         except Exception as e:
             failcount+=1
-            print('程序第'+str(failcount)+'次异常，异常原因：',e,'\t重试中...')
+            print('程序第'+str(failcount)+'次异常，异常原因：'+str(e)+'重试中...')
             all_window_handles = driver.window_handles
             for handle in all_window_handles:
                 if handle !=origin:
@@ -282,40 +296,44 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
             driver.implicitly_wait(0.5)
             sleep(0.5)       
 
-    if failcount==20:print('\n好像出了些什么问题,也可能是网站服务器问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
-    print('\nended!\n抢课结果:\n')
+    if failcount==20:print('好像出了些什么问题,也可能是网站服务器问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
+    print('ended!\n\n抢课结果:\n')
     for k in range(len(kechengs)):
         if stat[all_window_handles[k+1]][0]==1:
-            print(kechengs[k],'成功，程序成功抢课!')
+            print(kechengs[k]+'成功，程序成功抢课!')
         elif stat[all_window_handles[k+1]][0]==2:
-            print(kechengs[k],'成功，你之前已经选好这门课了!')
+            print(kechengs[k]+'成功，你之前已经选好这门课了!')
         elif stat[all_window_handles[k+1]][0]==3:
-            print(kechengs[k],'失败，抢课中遇到了一些问题，请自行尝试抢这门课!')
+            print(kechengs[k]+'失败，抢课中遇到了一些问题，请自行尝试抢这门课!')
         elif stat[all_window_handles[k+1]][0]==0:
-            print(kechengs[k],'失败，直到程序终止都没能抢到此门课!')    
+            print(kechengs[k]+'失败，直到程序终止都没能抢到此门课!')    
     end_time=strftime("%Y-%m-%d %H:%M:%S", localtime())
-    print('\nStart time: ',start_time)
-    print('End time: ',end_time)
+
+    print('\n')
+    print('Start time: '+start_time)
+    print('End time: '+end_time)
 
     my_file = 'button.png' # 文件路径
     if path.exists(my_file): # 如果文件存在
         remove(my_file) # 则删除
-    
-    print("\nPlease 'Star' the program of Daniel-ChenJH on Github if you think it's a quite good one. ")
-    print('\nLink to \'Course-Bullying-in-SJTU\' in Github : https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU')
-    input('\n程序已完成！请立即自行移步至教学信息服务网 i.sjtu.edu.cn 查询确认抢课结果！\n\n回车键退出程序……')
+
+    print('\n')
+    print("Please 'Star' the program of Daniel-ChenJH on Github if you think it's a quite good one. ")
+    print('Link to \'Course-Bullying-in-SJTU\' in Github : https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU')
+    print('\n')
+    input('程序已完成！请立即自行移步至教学信息服务网 https://i.sjtu.edu.cn 查询确认抢课结果！\n\n回车键退出程序……')
     driver.quit()
 
 
 if __name__ == '__main__':
-
-    #会同时在控制台输出和写入“log_file.txt”文件中
-    sys.stdout = Logger("qiangke_log_file.txt")
-
     print("\n\nCourse-Bullying-in-SJTU: an On-Time Automatic Class Snatching System\n\nAuthor:\t@Daniel-ChenJH (email address: 13760280318@163.com)\nFirst Published on Februry 25th, 2021 , revised for v2.0 on May 24th, 2021.\n")
     print('\nPlease read file \'readme.txt\' carefully and then edit file \'account.txt\' before running the program!!!\n')
+    print('The efficiency of this program depend on your network environment and your PC\'s capability.')
+    
+    # 检测程序是否异常终止
+    signal.signal(signal.SIGINT,signal_handling)
+
     now_time = datetime.datetime.now()
-    print('Starting progress in ',now_time.strftime('%Y-%m-%d %H:%M:%S'),' :\n====================================\n')
 
     # 用户输入读取
     data = []
@@ -348,8 +366,12 @@ if __name__ == '__main__':
         elif '，' in line.strip():
             kechengs.append(line.strip().split('，')[0])
             class_type.append(line.strip().split('，')[1])
-    
-    print('Welcome, ',account_name,'!')
+
+    sys.stdout = Logger("qiangke_log_file.txt")
+    #会同时在控制台输出和写入“log_file.txt”文件中
+    print('\n')
+    print('\n====================================\nStarting progress in '+now_time.strftime('%Y-%m-%d %H:%M:%S')+' :\n====================================\n')
+    print('Welcome, '+account_name+'!')
     print('目标课程：')
     print(kechengs)
     simulater(mode,on_time,kechengs,class_type,account_name,account_password,times)
