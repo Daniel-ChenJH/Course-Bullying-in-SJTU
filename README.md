@@ -53,14 +53,7 @@
 
 下面是文件 'account.txt'的一个很好的例子:
 
-1  
-2021-5-24 17:35:20  
-1000  
-your_jaccount_id_here  
-your_jaccount_password_here  
-物理化学，交叉课程  
-(2021-2022-1)-EE234-2，主修课程  
-(2021-2022-1)-MC903-1，通识课  
+12021-5-24 17:35:201000your_jaccount_id_hereyour_jaccount_password_here物理化学，交叉课程(2021-2022-1)-EE234-2，主修课程(2021-2022-1)-MC903-1，通识课
 
 11. 双击'qiangke.exe'启动进程，并耐心等待程序运行。
 12. 若程序以任何形式终止，请您先自行登录教学信息服务网，并尝试选课操作。请确保您已经：
@@ -95,4 +88,9 @@ Daniel-ChenJH,
 
 # 联系
 
-对于任何使用问题或讨论，请随时联系13760280318@163.com，如果是关于程序运行失败的讨论，请于附件中加上您的使用日志log文件‘qiangke_log_file.txt’，
+对于任何使用问题或讨论，请随时联系13760280318@163.com，如果是关于程序运行失败的讨论，请于附件中加上您的使用日志log文件‘qiangke_log_file.txt‘。
+
+
+# 脚本执行
+
+如果您希望执行程序的源代码脚本qiangke.py，您需要安装Tesseract-OCR软件，具体参考https://cloud.tencent.com/developer/article/1577435 。完成文中内容，添加环境变量后重启电脑便可正常运行。
