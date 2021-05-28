@@ -76,6 +76,21 @@
 因此，在运行本程序且抢课未完成时，若非想退出程序，请不要在任何时候点击程序运行时展现的命令行窗口，会导致程序阻塞！而如果您发现您不小心点了命令行窗口，
 窗口内出现了白色选中光标，请及时在窗口中点击鼠标右键即可，程序会恢复正常。
 
+# 程序运行效果
+
+![](image/README/1622171975308.png)
+
+![](image/README/1622171985647.png)
+
+程序的运行状况会被实时更新到log文件：qiangke_log_file.txt中。
+
+![](image/README/1622172020375.png)
+
+# 脚本执行
+
+如果您希望执行程序的源代码脚本qiangke.py，您需要安装Tesseract-OCR软件，具体参考https://cloud.tencent.com/developer/article/1577435 。完成文中内容，添加环境变量后重启电脑便可正常运行。
+
+
 # 鼓励
 
 如果您觉得Daniel-ChenJH的程序不错，请在Github上点亮“star”以给他一点鼓励。
@@ -89,8 +104,3 @@ Daniel-ChenJH,
 # 联系
 
 对于任何使用问题或讨论，请随时联系13760280318@163.com，如果是关于程序运行失败的讨论，请于附件中加上您的使用日志log文件‘qiangke_log_file.txt‘。
-
-
-# 脚本执行
-
-如果您希望执行程序的源代码脚本qiangke.py，您需要安装Tesseract-OCR软件，具体参考https://cloud.tencent.com/developer/article/1577435 。完成文中内容，添加环境变量后重启电脑便可正常运行。
