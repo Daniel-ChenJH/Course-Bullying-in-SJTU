@@ -43,7 +43,7 @@ class Logger(object):
         self.log = open(fileN, "a+",encoding='utf-8')
  
     def write(self, message):
-        if message=='\n' or message[0:5]=='\n====':
+        if message[0]=='\n':
             self.terminal.write(message)
             self.log.write(message)
         else:
@@ -176,7 +176,8 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                 else:sleep(2)     
             else:
                 if now_time>=on_time:break   
-        print('程序开始抢课！\n')
+    
+    print('程序开始抢课！\n')
 
     failcount=0
     # 点击下拉栏尝试进入选课页面
@@ -211,6 +212,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                     k+=1
                     sleep(0.2)
 
+            print('持续查询刷新中......')
             # 开始查询刷新
             for q in range(times):
                 temp=list(stat.values())
@@ -255,7 +257,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                         status=driver.find_element_by_xpath('//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td['+str(rongliang)+']')
                         if status.is_displayed():
                             # 显示已满
-                            print(strftime("%Y-%m-%d %H:%M:%S",localtime())+str(kechengs[stat[handle][1]])+'try_time=='+str(q+1)+'failed'+status.text)
+                            print(str(kechengs[stat[handle][1]])+'  try_time== '+str(q+1)+' failed '+status.text)
                             go=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div/div/div/span/button[1]')
                             go.click()
                         else:
@@ -267,20 +269,20 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                                     temp2=WebDriverWait(driver,1, 0.05).until(lambda driver: driver.find_element_by_xpath('//*[@id="contentBox"]//button'))
                                     try:
                                         if temp2.text=='退选': 
-                                            print('================================'+str(kechengs[stat[handle][1]]),', Success!'+strftime("%Y-%m-%d %H:%M:%S", localtime())+'try_time=='+str(q+1)+'========================\n')
+                                            print('================================ '+str(kechengs[stat[handle][1]])+' , Success! try_time== '+str(q+1)+' ========================\n')
                                             stat[handle][0]=1
                                         else:
                                             print('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
                                             stat[handle][0]=3
                                     except:
-                                        print('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
+                                        print('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!')
                                         stat[handle][0]=3
                                 else :
                                     print('你已经选上这门课了！'+str(kechengs[stat[handle][1]]))
                                     stat[handle][0]=2
                                 all_window_handles=driver.window_handles
                             except Exception as e:
-                                print(strftime("%Y-%m-%d %H:%M:%S", localtime())+str(kechengs[stat[handle][1]])+'try_time=='+str(q+1)+'failed',status.text)
+                                print(+str(kechengs[stat[handle][1]])+' try_time== '+str(q+1)+' failed '+status.text)
                                 print('failed because of :'+str(e)+' Retrying!')
             if False not in st:break
         except Exception as e:
@@ -297,13 +299,16 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
             sleep(0.5)       
 
     if failcount==20:print('好像出了些什么问题,也可能是网站服务器问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
-    print('ended!\n\n抢课结果:\n')
+    print('ended!\n\n抢课结果:\n\n成功：')
     for k in range(len(kechengs)):
         if stat[all_window_handles[k+1]][0]==1:
             print(kechengs[k]+'成功，程序成功抢课!')
         elif stat[all_window_handles[k+1]][0]==2:
             print(kechengs[k]+'成功，你之前已经选好这门课了!')
-        elif stat[all_window_handles[k+1]][0]==3:
+
+    print('\n失败：')
+    for k in range(len(kechengs)):       
+        if stat[all_window_handles[k+1]][0]==3:
             print(kechengs[k]+'失败，抢课中遇到了一些问题，请自行尝试抢这门课!')
         elif stat[all_window_handles[k+1]][0]==0:
             print(kechengs[k]+'失败，直到程序终止都没能抢到此门课!')    
@@ -372,6 +377,13 @@ if __name__ == '__main__':
     print('\n')
     print('\n====================================\nStarting progress in '+now_time.strftime('%Y-%m-%d %H:%M:%S')+' :\n====================================\n')
     print('Welcome, '+account_name+'!')
+    # print('Welcome, ******** !')
+    print('\n')
+    if mode==1:
+        print('抢课模式：1.准点开抢')
+    else:
+        print('抢课模式：2.持续捡漏')
+
     print('目标课程：')
     print(kechengs)
     simulater(mode,on_time,kechengs,class_type,account_name,account_password,times)
