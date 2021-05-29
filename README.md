@@ -78,18 +78,17 @@
 
 # 程序运行效果
 
-![](image/README/1622171975308.png)
+![](image/README/1622264022887.png)
 
-![](image/README/1622171985647.png)
+![](image/README/1622264029887.png)
 
 程序的运行状况会被实时更新到log文件：qiangke_log_file.txt中。
 
-![](image/README/1622172020375.png)
+![](image/README/1622264126140.png)
 
 # 脚本执行
 
 如果您希望执行程序的源代码脚本qiangke.py，您需要安装Tesseract-OCR软件，具体参考https://cloud.tencent.com/developer/article/1577435 。完成文中内容，添加环境变量后重启电脑便可正常运行。
-
 
 # 鼓励
 
