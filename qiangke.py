@@ -67,12 +67,11 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
     # 防止打印一些无用的日志
     option.add_experimental_option("excludeSwitches", ['enable-automation','enable-logging'])
     driver = webdriver.Chrome(options=option,executable_path=r'chromedriver.exe')
-    driver.get('https://i.sjtu.edu.cn/')
-    driver.maximize_window()    # 最大化页面
-    # sleep(2)
     driver.set_page_load_timeout(5)
     try:
-        login = WebDriverWait(driver,5,0.2).until(lambda x:driver.find_element_by_xpath('/html/body/div[2]/div/div/div[2]/div/div/form/div[6]/div/a/img') )
+        driver.get('https://i.sjtu.edu.cn/')
+        driver.maximize_window()    
+        login = WebDriverWait(driver,2,0.1).until(lambda x:driver.find_element_by_xpath('/html/body/div[2]/div/div/div[2]/div/div/form/div[6]/div/a/img') )
         login.click()
     except TimeoutException:
         driver.execute_script('window.stop()')
@@ -80,7 +79,6 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
     driver.switch_to.default_content()
     flag,flag2=True,True
     count=1
-
     while(flag):
         try:
             name=driver.find_element_by_xpath('//*[@id="user"]')
@@ -115,6 +113,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                 out.save(photoname)
                 cap=image_to_string(out)
                 captcha=driver.find_element_by_xpath('//*[@id="captcha"]')
+                captcha.clear()
                 captcha.send_keys(str(cap.strip()))
             else:
                 captcha=driver.find_element_by_xpath('//*[@id="captcha"]')
@@ -125,6 +124,16 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
             lanmu=driver.find_element_by_xpath('/html/body/div[3]/div/nav/ul/li[3]/a') # 用来确保登陆成功
             flag=False
             print('登录成功！\n')
+        except TimeoutException:
+            driver.refresh()
+            driver.switch_to.default_content()
+            try:
+                lanmu=driver.find_element_by_xpath('/html/body/div[3]/div/nav/ul/li[3]/a') # 用来确保登陆成功
+                flag=False
+                print('登录成功！\n')      
+            except NoSuchElementException:
+                flag=True
+        
         except TesseractNotFoundError:
             print('There is something wrong with your tesseract')
             print('The captcha can be seen from file: \'button.png\', please type in the captcha: ')
@@ -187,7 +196,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                 now=driver.window_handles
                 driver.find_element_by_xpath('/html/body/div[3]/div/nav/ul/li[3]/a').click()
                 driver.find_element_by_xpath('/html/body/div[3]/div/nav/ul/li[3]/ul/li[3]/a').click()
-                WebDriverWait(driver, 5, 0.1).until(EC.new_window_is_opened(now))
+                WebDriverWait(driver, 2, 0.05).until(EC.new_window_is_opened(now))
             all_window_handles = driver.window_handles
             k=0
             stat={}
@@ -195,26 +204,12 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
             for handle in all_window_handles:
                 if handle !=origin:
                     stat[handle]=[0,k]
-                    driver.switch_to.window(handle)
-                    driver.implicitly_wait(2)
-                    inp=driver.find_element_by_xpath('//*[@id="searchBox"]/div/div[1]/div/div/div/div/input')
-                    inp.send_keys(kechengs[k])
-                    
-                    go=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div/div/div/span/button[1]')
-                    go.click()
-
-                    typebox=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[4]/ul')
-                    types=typebox.find_elements_by_tag_name('a')
-                    for type in types:
-                        if class_type[k] in type.text:
-                            type.click()
-                            break
-                    k+=1
-                    sleep(0.2)
-
+                    k+=1                    
             print('持续查询刷新中......')
             # 开始查询刷新
             for q in range(times):
+                # 添加状态记录字典 
+
                 temp=list(stat.values())
                 st=[]
 
@@ -223,9 +218,24 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                 if 0 not in st:break    #所有课程都抢课完成
 
                 for handle in all_window_handles:
-                    if handle!=origin and not stat[handle][0]:
+                    if handle!=origin and stat[handle][0]==0:
                         driver.switch_to.window(handle)
-                        loc = (By.XPATH, '//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td[21]')
+                        if q==0:
+                            inp = WebDriverWait(driver,1,0.1).until(lambda x:driver.find_element_by_xpath('//*[@id="searchBox"]/div/div[1]/div/div/div/div/input') )
+                            inp.clear()
+                            inp.send_keys(kechengs[stat[handle][1]])
+                            
+                            go=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div/div/div/span/button[1]')
+                            go.click()
+
+                            typebox=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[4]/ul')
+                            types=typebox.find_elements_by_tag_name('a')
+                            for type in types:
+                                if class_type[stat[handle][1]] in type.text:
+                                    type.click()
+                                    break
+                        
+                        loc = (By.XPATH, '//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td[15]')
                         try:
                             WebDriverWait(driver,1,0.1).until(EC.visibility_of_element_located(loc))
                         except TimeoutException:pass
@@ -234,9 +244,10 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                         # 刷新次数达到500时重启程序
                         if (q+1)%500==0:
                             driver.refresh()
-                            sleep(0.5)
+                            sleep(1)
                             driver.implicitly_wait(5)
                             inp=driver.find_element_by_xpath('//*[@id="searchBox"]/div/div[1]/div/div/div/div/input')
+                            inp.clear()
                             inp.send_keys(kechengs[stat[handle][1]])
                             
                             # 查询按钮
@@ -262,17 +273,19 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                             go.click()
                         else:
                             try:
-                                temp=WebDriverWait(driver,1, 0.05).until(lambda driver: driver.find_element_by_xpath('//*[@id="contentBox"]//button'))
+                                temp=WebDriverWait(driver,1, 0.1).until(lambda driver: driver.find_element_by_xpath('//*[@id="contentBox"]//button'))
+                                sleep(0.2)
                                 if temp.text!='退选': 
+                                    # print(temp.text)
                                     temp.click()
-                                    sleep(0.1)
-                                    temp2=WebDriverWait(driver,1, 0.05).until(lambda driver: driver.find_element_by_xpath('//*[@id="contentBox"]//button'))
+                                    temp2=WebDriverWait(driver,1, 0.1).until(lambda driver: driver.find_element_by_xpath('//*[@id="contentBox"]//button'))
+                                    sleep(0.2)
                                     try:
                                         if temp2.text=='退选': 
                                             print('================================ '+str(kechengs[stat[handle][1]])+' , Success! try_time== '+str(q+1)+' ========================\n')
                                             stat[handle][0]=1
                                         else:
-                                            print('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
+                                            print('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!')
                                             stat[handle][0]=3
                                     except:
                                         print('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!')
@@ -282,12 +295,12 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                                     stat[handle][0]=2
                                 all_window_handles=driver.window_handles
                             except Exception as e:
-                                print(+str(kechengs[stat[handle][1]])+' try_time== '+str(q+1)+' failed '+status.text)
+                                print(str(kechengs[stat[handle][1]])+' try_time== '+str(q+1)+' failed '+status.text)
                                 print('failed because of :'+str(e)+' Retrying!')
             if False not in st:break
         except Exception as e:
             failcount+=1
-            print('程序第'+str(failcount)+'次异常，异常原因：'+str(e)+'重试中...')
+            print('程序第'+str(failcount)+'次异常，异常原因：'+str(e)+' 重试中...')
             all_window_handles = driver.window_handles
             for handle in all_window_handles:
                 if handle !=origin:
