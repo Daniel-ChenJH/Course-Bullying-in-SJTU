@@ -53,6 +53,15 @@ class Logger(object):
     def flush(self):
         self.log.flush()
  
+def quitting():
+    print("\nPlease 'Star' the program of Daniel-ChenJH on Github if you think it's a quite good one. ")
+    print('\nLink to \'Course-Bullying-in-SJTU\' in Github : https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU')
+    my_file = 'button.png' # 文件路径
+    if path.exists(my_file): # 如果文件存在
+        remove(my_file) # 则删除
+    print('\n')
+    input('程序已完成！请立即自行移步至教学信息服务网 https://i.sjtu.edu.cn 查询确认抢课结果！\n\n回车键退出程序……')
+
 
 def simulater(mode,on_time,kechengs,class_type,account_name,account_password,times):
     start_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
@@ -151,14 +160,9 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
 
                 driver.switch_to.default_content()
             if count>=12:
+                driver.quit()
                 print('\n大概率是您的jaccount信息输入错误，请检查并修改后重试...')
-                print("\nPlease 'Star' the program of Daniel-ChenJH on Github if you think it's a quite good one. ")
-                print('\nLink to \'Course-Bullying-in-SJTU\' in Github : https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU')
-
-                my_file = 'button.png' # 文件路径
-                if path.exists(my_file): # 如果文件存在
-                    remove(my_file) # 则删除
-                input('输入回车键退出……')
+                quitting()
                 return
         except ElementNotInteractableException:
             try:
@@ -173,11 +177,10 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
     
     # 准点开抢模式，阻塞程序
     if mode==1:
-        print('抢课开始时间设定为：'+on_time.strftime('%Y-%m-%d %H:%M:%S'))
         while True:
             now_time=datetime.datetime.now()
             if now_time<on_time and int((on_time-now_time).seconds)>2:
-                print('未到抢课开放时间，程序等待中')
+                print('未到设定的抢课开放时间，程序等待中')
                 if int((on_time-now_time).seconds)>60:
                     sleep(60) 
                 elif int((on_time-now_time).seconds)>10:
@@ -205,6 +208,7 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                 if handle !=origin:
                     stat[handle]=[0,k]
                     k+=1                    
+            
             print('持续查询刷新中......')
             # 开始查询刷新
             for q in range(times):
@@ -221,20 +225,38 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
                     if handle!=origin and stat[handle][0]==0:
                         driver.switch_to.window(handle)
                         if q==0:
-                            inp = WebDriverWait(driver,1,0.1).until(lambda x:driver.find_element_by_xpath('//*[@id="searchBox"]/div/div[1]/div/div/div/div/input') )
-                            inp.clear()
-                            inp.send_keys(kechengs[stat[handle][1]])
-                            
-                            go=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div/div/div/span/button[1]')
-                            go.click()
+                            classfind=False
+                            try:
+                                inp = WebDriverWait(driver,1,0.1).until(lambda x:driver.find_element_by_xpath('//*[@id="searchBox"]/div/div[1]/div/div/div/div/input') )
+                                inp.clear()
+                                inp.send_keys(kechengs[stat[handle][1]])
+                                go=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div/div/div/span/button[1]')
+                                go.click()
 
-                            typebox=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[4]/ul')
-                            types=typebox.find_elements_by_tag_name('a')
+                                typebox=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[4]/ul')
+                                types=typebox.find_elements_by_tag_name('a')
+                            except NoSuchElementException as e:
+                                unavailable=driver.find_element_by_xpath('//*[@id="innerContainer"]/div[4]/div[2]/div/span')
+                                if unavailable.is_displayed():
+                                    print('\n')
+                                    print('程序错误，当前不属于选课阶段，请自行确认抢课开放时间。')
+                                    driver.quit()
+                                    quitting()
+                                    return
+                                else:
+                                    print('程序好像出现了一些问题……')
+                                    print(e)
+                                
                             for type in types:
                                 if class_type[stat[handle][1]] in type.text:
                                     type.click()
+                                    classfind=True
                                     break
-                        
+                            if not classfind:
+                                print(kechengs[stat[handle][1]]+' 的用户指定类别：'+class_type[stat[handle][1]]+'不存在，将跳过此门课程；请检查确认无误后重新运行程序')
+                                stat[handle][0]=3
+                                continue
+
                         loc = (By.XPATH, '//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td[15]')
                         try:
                             WebDriverWait(driver,1,0.1).until(EC.visibility_of_element_located(loc))
@@ -330,17 +352,10 @@ def simulater(mode,on_time,kechengs,class_type,account_name,account_password,tim
     print('\n')
     print('Start time: '+start_time)
     print('End time: '+end_time)
-
-    my_file = 'button.png' # 文件路径
-    if path.exists(my_file): # 如果文件存在
-        remove(my_file) # 则删除
-
-    print('\n')
-    print("Please 'Star' the program of Daniel-ChenJH on Github if you think it's a quite good one. ")
-    print('Link to \'Course-Bullying-in-SJTU\' in Github : https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU')
-    print('\n')
-    input('程序已完成！请立即自行移步至教学信息服务网 https://i.sjtu.edu.cn 查询确认抢课结果！\n\n回车键退出程序……')
     driver.quit()
+
+    quitting()
+    
 
 
 if __name__ == '__main__':
@@ -393,7 +408,7 @@ if __name__ == '__main__':
     # print('Welcome, ******** !')
     print('\n')
     if mode==1:
-        print('抢课模式：1.准点开抢')
+        print('抢课模式：1.准点开抢\t抢课开始时间设定为：'+on_time.strftime('%Y-%m-%d %H:%M:%S'))
     else:
         print('抢课模式：2.持续捡漏')
 
