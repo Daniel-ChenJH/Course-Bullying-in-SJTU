@@ -12,13 +12,13 @@
 
 下面是文件 'account.txt'的一个很好的例子:
 
-1
-2021-05-24 17:35:20
-1000
-your_jaccount_id_here
-your_jaccount_password_here
-(2021-2022-1)-EE234-2，主修课程
-世界民族音乐鉴赏，通识课
+1  
+2021-05-24 17:35:20  
+1000  
+your_jaccount_id_here  
+your_jaccount_password_here  
+(2021-2022-1)-EE234-2，主修课程  
+世界民族音乐鉴赏，通识课  
 
 ## 模式2：持续捡漏
 
@@ -28,13 +28,13 @@ your_jaccount_password_here
 
 下面是文件 'account.txt'的一个很好的例子:
 
-2
-2021-05-24 17:35:20
-1000
-your_jaccount_id_here
-your_jaccount_password_here
-(2021-2022-1)-EE234-2，主修课程
-世界民族音乐鉴赏，通识课
+2  
+2021-05-24 17:35:20  
+1000  
+your_jaccount_id_here  
+your_jaccount_password_here  
+(2021-2022-1)-EE234-2，主修课程  
+世界民族音乐鉴赏，通识课  
 
 ## 模式3：替换抢课
 
@@ -56,13 +56,13 @@ your_jaccount_password_here
 
 下面是文件 'account.txt'的一个很好的例子:
 
-3
-2021-05-24 17:35:20
-1000
-your_jaccount_id_here
-your_jaccount_password_here
-(2021-2022-1)-EE234-2，主修课程  >>> (2020-2021-2)-SO949-1，通识课
-(2020-2021-3)-HI951-1，交叉课程 >>> (2020-2021-3)-HI954-1，任选课程
+3  
+2021-05-24 17:35:20  
+1000  
+your_jaccount_id_here  
+your_jaccount_password_here  
+(2021-2022-1)-EE234-2，主修课程  >>> (2020-2021-2)-SO949-1，通识课  
+(2020-2021-3)-HI951-1，交叉课程 >>> (2020-2021-3)-HI954-1，任选课程  
 
 # 使用说明
 
@@ -117,13 +117,13 @@ your_jaccount_password_here
 
 下面是文件 'account.txt'的一个很好的例子:
 
-1
-2021-05-24 17:35:20
-1000
-your_jaccount_id_here
-your_jaccount_password_here
-(2021-2022-1)-EE234-2，主修课程
-世界民族音乐鉴赏，通识课
+1  
+2021-05-24 17:35:20  
+1000  
+your_jaccount_id_here  
+your_jaccount_password_here  
+(2021-2022-1)-EE234-2，主修课程  
+世界民族音乐鉴赏，通识课  
 
 11. 双击'qiangke.exe'启动进程，并耐心等待程序运行。
 12. 若程序以任何形式终止，请您先自行登录教学信息服务网，并尝试选课操作。请确保您已经：
