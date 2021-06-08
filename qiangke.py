@@ -41,9 +41,8 @@ def signal_handling(signum,frame):
     logger.info('******************************')
     sys.exit()
 
-def login(headless,bili):
+def login(headless):
     option = webdriver.ChromeOptions()
-    # 无头模式；采用有头模式时将bili调成当前电脑屏幕的缩放比例（1、1.25、1.5或2），并注释掉50~52行
     if headless:
         option.add_argument('--headless')
     option.add_argument('--no-sandbox')
