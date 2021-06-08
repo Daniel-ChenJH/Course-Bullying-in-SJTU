@@ -232,10 +232,10 @@ def quitting():
     input('程序已完成！请立即自行移步至教学信息服务网 https://i.sjtu.edu.cn 查询确认抢课结果！\n\n回车键退出程序……')
 
 
-def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times,headless=True,bili=1):
+def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times,headless=True):
     start_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
     
-    driver,origin=login(headless=headless,bili=bili)
+    driver,origin=login(headless=headless)
     # 准点开抢模式，阻塞程序    
     waitbegin(mode,on_time)
     failcount=0
@@ -602,7 +602,7 @@ if __name__ == '__main__':
         logger.info('替换课程关系：')
         for i in range(len(kechengs)):
             logger.info(old_kechengs[i]+' >>> '+kechengs[i])
-    # 无头模式；采用有头模式时将bili调成当前电脑屏幕的缩放比例（1、1.25、1.5或2）
-    # 默认参数：headless=True，bili=1
-    # simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times,headless=False,bili=1.25)
+    logger.info('最大刷新次数设定为： '+str(times))
+    # 默认参数：headless=True 采用无头模式
+    # simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times,headless=False)
     simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times)
