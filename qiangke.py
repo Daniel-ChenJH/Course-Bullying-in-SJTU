@@ -228,7 +228,8 @@ def quitting():
         remove(my_file) # 则删除
     my_file = 'qrcode.jpg' # 文件路径
     if path.exists(my_file): # 如果文件存在
-        remove(my_file) # 则删除    input('程序已完成！请立即自行移步至教学信息服务网 https://i.sjtu.edu.cn 查询确认抢课结果！\n\n回车键退出程序……')
+        remove(my_file) # 则删除    
+    input('程序已完成！请立即自行移步至教学信息服务网 https://i.sjtu.edu.cn 查询确认抢课结果！\n\n回车键退出程序……')
 
 
 def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times,headless=True,bili=1):
