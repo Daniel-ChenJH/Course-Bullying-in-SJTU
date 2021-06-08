@@ -1,32 +1,38 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   qiangke.py
-@Time    :   2021/06/03 19:31:18
+@Time    :   2021/06/08 10:31:18
 @Author  :   Daniel-ChenJH
 @Email   :   13760280318@163.com
-@Version    :   3.0
+@Version    :   3.1
 @Descriptions :   Course-Bullying-in-SJTU
-                    上海交通大学全自动抢课脚本,请保证已经安装了最新版本的Chrome浏览器（90.0.4430系列版本）
+                    上海交通大学全自动抢课脚本,请保证已经安装了最新版本的Chrome浏览器（91.0.4472系列版本）
                     本程序支持准点开抢与抢课已经开始后持续捡漏两种模式。
 '''
 
 # The imported libs: 
 import logging
-from selenium import webdriver
+import datetime
+import sys
+import requests
+import signal
+import json
+import time
+from PIL import Image
+import threading
+from os import remove, path
 from time import sleep,strftime,localtime
 from PIL import Image
-from pytesseract import image_to_string
-from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import ElementNotInteractableException
-from pytesseract.pytesseract import TesseractNotFoundError
-from os import remove, path
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException,NoSuchElementException,ElementNotInteractableException
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-import datetime
-import sys
-import signal
+
+# 显示二维码的子线程
+def showpic():
+    im=Image.open('qrcode.jpg')
+    im.show()
 
 # 检测程序异常终止
 def signal_handling(signum,frame):
@@ -35,7 +41,7 @@ def signal_handling(signum,frame):
     logger.info('******************************')
     sys.exit()
 
-def login(account_name,account_password,headless,bili):
+def login(headless,bili):
     option = webdriver.ChromeOptions()
     # 无头模式；采用有头模式时将bili调成当前电脑屏幕的缩放比例（1、1.25、1.5或2），并注释掉50~52行
     if headless:
@@ -55,97 +61,84 @@ def login(account_name,account_password,headless,bili):
     driver.set_page_load_timeout(5)
     try:
         driver.get('https://i.sjtu.edu.cn/')
-        driver.maximize_window()    
         login = WebDriverWait(driver,5,0.1).until(lambda x:driver.find_element_by_xpath('/html/body/div[2]/div/div/div[2]/div/div/form/div[6]/div/a/img') )
+        
+        # 尝试使用cookie登录
+        if path.exists('cookie.txt'):
+            f1 = open('cookie.txt','r')
+            cookie = f1.read()
+            cookie =json.loads(cookie)
+            driver.delete_all_cookies()
+            expire,temp=9999999999,9999999999
+            for c in cookie:
+                if 'expiry' in cookie:
+                    if c['expiry']<expire:expire=c['expiry']
+                    del cookie['expiry']
+            # 过期时间超过两小时
+            if  int(expire)-int(time.time())>7200:
+                for c in cookie:
+                    if 'expiry' in cookie:del cookie['expiry']
+                    driver.add_cookie(c)
+                driver.refresh()
+                sleep(0.5)
+                driver.switch_to.default_content()
+                try:
+                    lanmu=driver.find_element_by_xpath('/html/body/div[3]/div/nav/ul/li[3]/a')
+                    logger.info('使用cookie登录成功！')
+                    origin= driver.current_window_handle
+                    driver.implicitly_wait(5)
+                    return driver,origin                    
+                except TimeoutException:
+                    logger.info('使用cookie登录失败，请删除文件\'cookie.txt\'后尝试重新运行程序……')
+                    driver.quit()
+                    quitting()
+                except NoSuchElementException:
+                    logger.info('使用cookie登录失败')
+                    driver.delete_all_cookies()
+                    driver.refresh()
+                    driver.switch_to.default_content()
+                    login = WebDriverWait(driver,3,0.1).until(lambda x:driver.find_element_by_xpath('/html/body/div[2]/div/div/div[2]/div/div/form/div[6]/div/a/img') )
+        logger.info('正在使用二维码登录……')
         login.click()
     except TimeoutException:
         driver.execute_script('window.stop()')
 
     driver.switch_to.default_content()
     flag,flag2=True,True
-    count=1
+    count=0
     while(flag):
         try:
-            name=driver.find_element_by_xpath('//*[@id="user"]')
-            name.clear()
-            name.send_keys(account_name)
-            password=driver.find_element_by_xpath('//*[@id="pass"]')
-            password.clear()
-            password.send_keys(account_password)
-            
-            if flag2:       #如果pytesseract没有问题
-                captcha=driver.find_element_by_xpath('//*[@id="captcha-img"]')
-                photoname='button.png'
-                driver.save_screenshot(photoname)
-
-                left = captcha.location['x']*bili
-                top = captcha.location['y']*bili
-                right = left + captcha.size['width']*bili
-                bottom = top + captcha.size['height']*bili
-
-                im = Image.open(photoname)
-                im = im.crop((left, top, right, bottom))
-                gray = im.convert('L')
-                threshold = 180
-                table = []
-                for i in range(256):
-                    if i < threshold:
-                        table.append(0)
-                    else:
-                        table.append(1)
-                out = gray.point(table, '1')
-                out.save(photoname)
-                cap=image_to_string(out)
-                captcha=driver.find_element_by_xpath('//*[@id="captcha"]')
-                captcha.clear()
-                captcha.send_keys(str(cap.strip()))
-            else:
-                captcha=driver.find_element_by_xpath('//*[@id="captcha"]')
-                captcha.clear()
-                captcha.send_keys(hand_cap.strip())
-            driver.find_element_by_xpath('//*[@id="submit-button"]').click()
-            driver.switch_to.default_content()
-            lanmu=driver.find_element_by_xpath('/html/body/div[3]/div/nav/ul/li[3]/a') # 用来确保登陆成功
-            flag=False
-            logger.info('登录成功！\n')
-        except TimeoutException:
-            driver.refresh()
-            driver.switch_to.default_content()
-            try:
+            count+=1
+            if count==6:
+                logger.info('失败次数太多，请删除\'cookie.txt\'(若有)后重新运行程序！')
+                driver.quit()
+                quitting()
+            try:driver.refresh()
+            except TimeoutException:driver.execute_script('window.stop()')
+            finally:
+                driver.switch_to.default_content()
+                qrcode=WebDriverWait(driver,3,0.1).until(lambda x:driver.find_element_by_xpath('//*[@id="qr-img"]/img'))
+                qrcode=qrcode.get_attribute("src")
+                qrcode = requests.get(qrcode, timeout=2)
+                # 将获取的内容保存为后缀为jpg的图片
+                fp = open("qrcode.jpg", "wb")
+                fp.write(qrcode.content)
+                fp.close()
+                mythread = threading.Thread(target=showpic)
+                mythread.start()
+                logger.info('请在20秒内完成扫码确认登录（二维码将会弹出），20秒后程序将继续运行！')
+                sleep(20)
+                driver.switch_to.default_content()
                 lanmu=driver.find_element_by_xpath('/html/body/div[3]/div/nav/ul/li[3]/a') # 用来确保登陆成功
                 flag=False
-                logger.info('登录成功！\n')      
-            except NoSuchElementException:
-                flag=True
-        
-        except TesseractNotFoundError:
-            logger.info('There is something wrong with your tesseract')
-            logger.info('The captcha can be seen from file: \'button.png\', please type in the captcha: ')
-            hand_cap=input('hand_cap=')
-            flag2=False
-        except NoSuchElementException:
-            logger.info('验证码自动识别错误或jaccount信息输入错误，正在尝试第'+str(count+1)+'次...')
-            count+=1
-            if count%3==0:
-                driver.refresh()
-                try:
-                    captcha = WebDriverWait(driver,3,0.1).until(lambda x:driver.find_element_by_xpath('//*[@id="captcha"]'))
-                except TimeoutException:
-                    driver.execute_script('window.stop()')
-
-                driver.switch_to.default_content()
-            if count>=12:
-                driver.quit()
-                logger.info('大概率是您的jaccount信息输入错误，请检查并修改后重试...')
-                quitting()
-                sys.exit(0)
-        except ElementNotInteractableException:
-            try:
-                driver.refresh()
-                sleep(3)
-            except TimeoutException:
-                driver.execute_script('window.stop()')
-            driver.switch_to.default_content()
+                logger.info('登录成功！\n')
+                # 记录cookie
+                cookies = driver.get_cookies()
+                f1 = open('cookie.txt', 'w')
+                f1.write(json.dumps(cookies))
+                f1.close()                 
+        except NoSuchElementException as e:
+            logger.info('登录失败，请再次扫码重试！（新的二维码将会弹出）')
 
     origin= driver.current_window_handle
     driver.implicitly_wait(5)
@@ -224,6 +217,7 @@ def search_again(driver,kechengs,stat,handle,class_type):
             except TimeoutException:pass
             driver.implicitly_wait(3)
             break
+    sleep(1)
     return driver
 
 def quitting():
@@ -232,18 +226,17 @@ def quitting():
     my_file = 'button.png' # 文件路径
     if path.exists(my_file): # 如果文件存在
         remove(my_file) # 则删除
-    input('程序已完成！请立即自行移步至教学信息服务网 https://i.sjtu.edu.cn 查询确认抢课结果！\n\n回车键退出程序……')
+    my_file = 'qrcode.jpg' # 文件路径
+    if path.exists(my_file): # 如果文件存在
+        remove(my_file) # 则删除    input('程序已完成！请立即自行移步至教学信息服务网 https://i.sjtu.edu.cn 查询确认抢课结果！\n\n回车键退出程序……')
 
 
-def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,account_name,account_password,times,headless=True,bili=1):
+def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times,headless=True,bili=1):
     start_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
-
-
-    driver,origin=login(account_name,account_password,headless=headless,bili=bili)
-
+    
+    driver,origin=login(headless=headless,bili=bili)
     # 准点开抢模式，阻塞程序    
     waitbegin(mode,on_time)
-    
     failcount=0
     
     while failcount<50:
@@ -272,6 +265,7 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,accou
                                     
             
             # 此时已经进入选课界面
+            httperror=0
             logger.info('持续查询刷新中......')
             # 开始查询刷新
             for q in range(times):
@@ -309,30 +303,68 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,accou
                         except TimeoutException:pass
                         driver.implicitly_wait(0.5)
 
-                        # 刷新次数达到500时重启程序
-                        if (q+1)%500==0:
+                        # 刷新次数达到300时暂缓程序
+                        if (q+1)%300==0:
+                            logging.info('刷新次数达到300的倍数，程序小歇一会...')
+                            sleep(1)
                             driver=search_again(driver,all_kechengs,all_stat,handle,all_class_type)
-                        
-                        sleep(0.25)         
+                            sleep(1.5)
+
+                        sleep(0.35)         
                         rongliang=10+len(driver.find_elements_by_xpath("/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/thead/tr/th"))
                         # status=(By.XPATH,'//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td['+str(rongliang)+']')
                         # WebDriverWait(driver,4,0.1).until(EC.presence_of_element_located(status))
-                        if rongliang < 13:
-                            logger.info('可能是课号输入出现问题，请将\'account.txt\'中的课号修改后重新运行')
-                            driver.quit()
-                            quitting()
+                        kongcount=0
+                        # 检查服务器情况并尝试等待
+                        while rongliang < 13:
+                            kongcount+=1
+                            sleep(1)
+                            rongliang=10+len(driver.find_elements_by_xpath("/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/thead/tr/th"))
+                            if kongcount==3:
+                                if q<5:
+                                    logger.info('可能是服务器不稳定或课程输入出现问题，请检查\'account.txt\'后重新运行')
+                                    driver.quit()
+                                    quitting()
+                                    sys.exit(0)
+                                else:
+                                    # 正常刷新过，说明是服务器问题
+                                    kongcount=0
+                                    logging.info('服务器不稳定，尝试重连，程序小歇一会...')
+                                    sleep(1)
+                                    driver=search_again(driver,all_kechengs,all_stat,handle,all_class_type)
+                                    sleep(1.5)
+                                    continue
                         status=driver.find_element_by_xpath('//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td['+str(rongliang)+']')
                         
                         if status.is_displayed():
                             # 显示已满
-                            logger.info(str(kechengs[stat[handle][1]])+'  try_time== '+str(q+1)+' 无空余名额 '+status.text)
+                            if (q+1)%10==0:
+                                logger.info(str(kechengs[stat[handle][1]])+'  try_time== '+str(q+1)+' 无空余名额 '+status.text)
                             go=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div/div/div/span/button[1]')
                             go.click()
                         else:
                             try:
                                 sleep(0.2) 
                                 temp=WebDriverWait(driver,1, 0.1).until(lambda driver: driver.find_element_by_xpath('//*[@id="contentBox"]//button'))
-                                if temp.text!='退选': 
+                                kongcount=0
+                                # 检查服务器情况并尝试等待
+                                while kongcount<4 and '选' not in temp.text:
+                                    temp=WebDriverWait(driver,1, 0.1).until(lambda driver: driver.find_element_by_xpath('//*[@id="contentBox"]//button'))
+                                    kongcount+=1
+                                    sleep(1)
+                                
+                                if '选' not in temp.text:
+                                    logger.info(str(kechengs[stat[handle][1]])+'  try_time== '+str(q+1)+' 服务器不稳定'+str(temp.text))
+                                    httperror+=1
+                                    if httperror>3:
+                                        httperror=0
+                                        logger.info('尝试重连服务器，程序小歇一会...')
+                                        sleep(1)
+                                        driver=search_again(driver,all_kechengs,all_stat,handle,all_class_type)
+                                        sleep(1.5)
+                                    continue
+
+                                if temp.text=='选课': 
                                     if mode==3:
                                         # 退掉对应的那一门课
                                         logger.info('发现 '+kechengs[stat[handle][1]]+' 有空余名额，执行替换操作 '+temp.text)
@@ -344,13 +376,18 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,accou
                                         try:
                                             confirm=driver.find_element_by_xpath('//*[@id="confirmModal"]/div/div/div[2]/div/div/p')
                                             if confirm.is_displayed():
-                                                logger.info('正在退选 '+str(old_kechengs[stat[handle][1]])+'...')
                                                 tuixuanqueding=WebDriverWait(driver,1, 0.1).until(lambda driver: driver.find_element_by_xpath('//*[@id="btn_confirm"]'))
-                                                tuixuanqueding.click()
-                                                sleep(0.2)
-                                                driver.implicitly_wait(0.5)
-                                                logger.info('退选成功！')
-                                                # 换回之前的窗口
+                                                if '确' in tuixuanqueding.text:
+                                                    tuixuanqueding.click()
+                                                    logger.info('正在退选 '+str(old_kechengs[stat[handle][1]])+'...')
+                                                    sleep(0.2)
+                                                    driver.implicitly_wait(0.5)
+                                                    logger.info('退选成功！')
+                                                    # 换回之前的窗口
+                                                else:
+                                                    driver.switch_to.window(handle)
+                                                    driver.implicitly_wait(0.5)
+                                                    continue
                                                 driver.switch_to.window(handle)
                                                 driver.implicitly_wait(0.5)
 
@@ -363,41 +400,78 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,accou
                                                 try:WebDriverWait(driver,1,0.1).until(EC.text_to_be_present_in_element((By.XPATH, '//*[@id="contentBox"]//button'),"选课"))
                                                 except:pass
                                                 temp=driver.find_element_by_xpath('//*[@id="contentBox"]//button')
-                                        except Exception as e:
+                                                kongcount=0
+
+                                                # 检查服务器情况并尝试等待
+                                                while kongcount<4 and '选' not in temp.text:
+                                                    temp=WebDriverWait(driver,1, 0.1).until(lambda driver: driver.find_element_by_xpath('//*[@id="contentBox"]//button'))
+                                                    kongcount+=1
+                                                    sleep(1)
+                                                
+                                                if '选' not in temp.text:
+                                                    logger.info(str(kechengs[stat[handle][1]])+'  try_time== '+str(q+1)+' 服务器不稳定'+str(temp.text))
+                                                    logger.info('服务器不稳定！请稍后重试...')
+                                                    logger.info('请立即前往教学信息服务网补选刚刚退掉的课程： '+str(old_kechengs[stat[handle][1]])+' !!!')
+                                                    driver.quit()
+                                                    quitting()
+                                                    sys.exit(0)
+
+                                        except NoSuchElementException as e:
+                                            logger.info(e.__class__.__name__)
                                             logger.info(e)
-                                            logger.info('退选'+old_kechengs[stat[handle][1]]+'时出现问题，请立即自行前往尝试退选并选课')
-                                            driver.quit()
-                                            quitting()
-                                            # sleep(0.3)
-                                            # print('temp按钮内容： '+temp.text)
+                                            logger.info('程序退选失败，将在下次循环继续尝试')
+                                            driver.switch_to.window(handle)
+                                            driver.implicitly_wait(0.5)
+                                            continue
+                                            sleep(0.3)
+                                    # print('temp按钮内容： '+temp.text)
                                     temp.click()
                                     sleep(0.3)
                                     driver.implicitly_wait(2)
                                     try:WebDriverWait(driver,1,0.1).until(EC.text_to_be_present_in_element((By.XPATH, '//*[@id="contentBox"]//button'),"退选"))
-                                    except:pass
+                                    except TimeoutException:pass
                                     temp2=driver.find_element_by_xpath('//*[@id="contentBox"]//button')
                                     # print('temp2按钮内容： '+temp2.text)
+                                    kongcount=0
+
+                                    # 检查服务器情况并尝试等待
+                                    while kongcount<4 and '选' not in temp2.text:
+                                        temp2=WebDriverWait(driver,1, 0.1).until(lambda driver: driver.find_element_by_xpath('//*[@id="contentBox"]//button'))
+                                        kongcount+=1
+                                        sleep(0.5)
+                                    
+                                    if '选' not in temp2.text:
+                                        logger.info(str(kechengs[stat[handle][1]])+'  try_time== '+str(q+1)+' 服务器不稳定'+str(temp2.text))
+                                        logger.info('服务器不稳定！请稍后重试...')
+                                        logger.info('请立即前往教学信息服务网补选刚刚退掉的课程： '+str(old_kechengs[stat[handle][1]])+' !!!')
+                                        driver.quit()
+                                        quitting()
+                                        sys.exit(0)
                                     try:
                                         if temp2.text=='退选': 
                                             logger.info('\n================================ '+str(kechengs[stat[handle][1]])+' , Success! try_time== '+str(q+1)+' ========================\n')
                                             stat[handle][0]=1
-                                        else:                                    
-                                            logger.info('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!')
+                                        elif temp2.text=='选课':                                    
+                                            temp2.click()
+                                            logger.info('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!'+str(temp2.text))
                                             stat[handle][0]=3
+                                            sleep(2)
                                     except Exception as e:
-                                        logger.info(str(e)+'Error! 好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!')
+                                        logger.info(e.__class__.__name__)
+                                        logger.info(str(e)+'Error! 好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!'+str(temp2.text))
                                         stat[handle][0]=3
-                                else :
+                                        sleep(2)
+                                elif temp.text=='退选' :
                                     logger.info('你已经选上这门课了！'+str(kechengs[stat[handle][1]]))
                                     stat[handle][0]=2
                             except Exception as e:
                                 logger.info(str(kechengs[stat[handle][1]])+' try_time== '+str(q+1)+' failed '+status.text)
-                                logger.info('failed because of :'+str(e)+' Retrying!')
+                                logger.info('failed because of :'+str(e.__class__.__name__)+str(e)+' Retrying!')
             if q==times-1 or 0 not in st:break
         except Exception as e:
             failcount+=1
             if failcount==1 and q>800: sleep(5)
-            logger.info('程序第'+str(failcount)+'次异常，异常原因：'+str(e)+' 重试中...')
+            logger.info('程序第'+str(failcount)+'次异常，异常原因：'+str(e.__class__.__name__)+str(e)+' 重试中...')
             all_window_handles = driver.window_handles
             for handle in all_window_handles:
                 if handle !=origin:
@@ -406,7 +480,8 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,accou
                     driver.close()
             driver.switch_to.window(origin)
             driver.implicitly_wait(0.5)
-            driver.refresh()
+            # driver.refresh()
+            # driver.maximize_window()
             sleep(5)       
 
     if failcount==20:logger.info('好像出了些什么问题,也可能是网站服务器问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
@@ -461,7 +536,7 @@ if __name__ == '__main__':
     logger.addHandler(fh)
     # logger.info('this is info message')
 
-    logger.info("\n\nCourse-Bullying-in-SJTU: On-Time Automatic Class Snatching System\n\nAuthor:\t@Daniel-ChenJH (email address: 13760280318@163.com)\nFirst Published on Februry 25th, 2021 , revised for v2.0 on May 24th, 2021, v3.0 on June 3rd,2021 .\n\nPlease read file \'readme.txt\' carefully and then edit file \'account.txt\' before running the program!!!\nThe efficiency of this program depend on your network environment and your PC\'s capability.")
+    logger.info("\n\nCourse-Bullying-in-SJTU: On-Time Automatic Class Snatching System\n\nAuthor:\t@Daniel-ChenJH (email address: 13760280318@163.com)\nFirst Published on Februry 25th, 2021 , revised for v3.1 on June 8rd, 2021.\n\nPlease read file \'readme.txt\' carefully and then edit file \'account.txt\' before running the program!!!\nThe efficiency of this program depend on your network environment and your PC\'s capability.")
     
     # 检测程序是否异常终止
     signal.signal(signal.SIGINT,signal_handling)
@@ -480,14 +555,7 @@ if __name__ == '__main__':
     else:on_time=datetime.datetime.strptime('2020-01-01 00:00:00','%Y-%m-%d %H:%M:%S')
 
     times=int(data[2])
-    account_name=data[3]
-    account_password=data[4]
-    dataline=5
-
-    # 提升修改jaccount信息
-    if account_name=='your_jaccount_id_here' or account_password=='your_jaccount_password_here':
-        logger.info('请先修改jaccount信息，再运行程序！')
-        sys.exit(0)
+    dataline=3
 
     kechengs=[]
     class_type=[] 
@@ -498,27 +566,27 @@ if __name__ == '__main__':
             left=line.split('>>>')[0].strip()
             right=line.split('>>>')[1].strip()
             if ',' in right:
-                kechengs.append(right.split(',')[0].strip())
+                kechengs.append(right.split(',')[0].strip().upper())
                 class_type.append(right.split(',')[1].strip())
             elif '，' in right:
-                kechengs.append(right.split('，')[0].strip())
+                kechengs.append(right.split('，')[0].strip().upper())
                 class_type.append(right.split('，')[1].strip())
             if ',' in left:
-                old_kechengs.append(left.split(',')[0].strip())
+                old_kechengs.append(left.split(',')[0].strip().upper())
                 old_class_type.append(left.split(',')[1].strip())
             elif '，' in left:
-                old_kechengs.append(left.split('，')[0].strip())
+                old_kechengs.append(left.split('，')[0].strip().upper())
                 old_class_type.append(left.split('，')[1].strip())
         else:
             if ',' in line:
-                kechengs.append(line.split(',')[0].strip())
+                kechengs.append(line.split(',')[0].strip().upper())
                 class_type.append(line.split(',')[1].strip())
             elif '，' in line:
-                kechengs.append(line.split('，')[0].strip())
+                kechengs.append(line.split('，')[0].strip().upper())
                 class_type.append(line.split('，')[1].strip())
 
     logger.info('\n====================================\nStarting progress in '+now_time.strftime('%Y-%m-%d %H:%M:%S')+' :\n====================================\n')
-    logger.info('Welcome, '+account_name+'!')
+    logger.info('Welcome!')
     # logger.info('Welcome, ******** !')
     if mode==1:
         logger.info('抢课模式：1.准点开抢\t抢课开始时间设定为：'+on_time.strftime('%Y-%m-%d %H:%M:%S'))
@@ -535,5 +603,5 @@ if __name__ == '__main__':
             logger.info(old_kechengs[i]+' >>> '+kechengs[i])
     # 无头模式；采用有头模式时将bili调成当前电脑屏幕的缩放比例（1、1.25、1.5或2）
     # 默认参数：headless=True，bili=1
-    # simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,account_name,account_password,times,headless=False,bili=1.25)
-    simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,account_name,account_password,times)
+    # simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times,headless=False,bili=1.25)
+    simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times)
