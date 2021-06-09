@@ -13,6 +13,7 @@
 # The imported libs: 
 import logging
 import datetime
+import traceback
 import sys
 import requests
 import signal
@@ -24,7 +25,7 @@ from os import remove, path
 from time import sleep,strftime,localtime
 from PIL import Image
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException,NoSuchElementException,ElementNotInteractableException
+from selenium.common.exceptions import TimeoutException,NoSuchElementException,ElementNotInteractableException,ElementClickInterceptedException,StaleElementReferenceException
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -92,7 +93,7 @@ def login(headless):
                     driver.quit()
                     quitting()
                 except NoSuchElementException:
-                    logger.info('使用cookie登录失败')
+                    logger.info('使用cookie登录失败！')
                     driver.delete_all_cookies()
                     driver.refresh()
                     driver.switch_to.default_content()
@@ -238,7 +239,8 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times
     # 准点开抢模式，阻塞程序    
     waitbegin(mode,on_time)
     failcount=0
-    
+    waittime=0
+
     while failcount<50:
         try:
             # 点击下拉栏尝试进入选课页面
@@ -266,6 +268,7 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times
             
             # 此时已经进入选课界面
             httperror=0
+            
             logger.info('持续查询刷新中......')
             # 开始查询刷新
             for q in range(times):
@@ -303,14 +306,15 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times
                         except TimeoutException:pass
                         driver.implicitly_wait(0.5)
 
-                        # 刷新次数达到300时暂缓程序
-                        if (q+1)%300==0:
-                            logging.info('刷新次数达到300的倍数，程序小歇一会...')
-                            sleep(1)
-                            driver=search_again(driver,all_kechengs,all_stat,handle,all_class_type)
-                            sleep(1.5)
+                        # # 刷新次数达到300时暂缓程序
+                        # if (q+1)%300==0:
+                        #     logging.info('刷新次数达到300的倍数，程序小歇一会...')
+                        #     sleep(1)
+                        #     driver=search_again(driver,all_kechengs,all_stat,handle,all_class_type)
+                        #     sleep(1.5)
 
-                        sleep(0.35)         
+                        # sleep(0.8)         
+                        sleep(0.35+waittime)
                         rongliang=10+len(driver.find_elements_by_xpath("/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/thead/tr/th"))
                         # status=(By.XPATH,'//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td['+str(rongliang)+']')
                         # WebDriverWait(driver,4,0.1).until(EC.presence_of_element_located(status))
@@ -320,7 +324,7 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times
                             kongcount+=1
                             sleep(1)
                             rongliang=10+len(driver.find_elements_by_xpath("/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/thead/tr/th"))
-                            if kongcount==3:
+                            if kongcount==2:
                                 if q<5:
                                     logger.info('可能是服务器不稳定或课程输入出现问题，请检查\'account.txt\'后重新运行')
                                     driver.quit()
@@ -332,10 +336,9 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times
                                     logging.info('服务器不稳定，尝试重连，程序小歇一会...')
                                     sleep(1)
                                     driver=search_again(driver,all_kechengs,all_stat,handle,all_class_type)
-                                    sleep(1.5)
+                                    # sleep(1.5)
                                     continue
                         status=driver.find_element_by_xpath('//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td['+str(rongliang)+']')
-                        
                         if status.is_displayed():
                             # 显示已满
                             if (q+1)%10==0:
@@ -356,12 +359,12 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times
                                 if '选' not in temp.text:
                                     logger.info(str(kechengs[stat[handle][1]])+'  try_time== '+str(q+1)+' 服务器不稳定'+str(temp.text))
                                     httperror+=1
-                                    if httperror>3:
+                                    if httperror>1:
                                         httperror=0
                                         logger.info('尝试重连服务器，程序小歇一会...')
                                         sleep(1)
                                         driver=search_again(driver,all_kechengs,all_stat,handle,all_class_type)
-                                        sleep(1.5)
+                                        # sleep(1.5)
                                     continue
 
                                 if temp.text=='选课': 
@@ -456,6 +459,11 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times
                                             logger.info('好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!'+str(temp2.text))
                                             stat[handle][0]=3
                                             sleep(2)
+                                    except (ElementClickInterceptedException,StaleElementReferenceException):
+                                        waittime+=0.05
+                                        logger.info('服务器不稳定，将在此后稍许延长等待时间为： '+str(0.35+waittime)+' 秒试试')
+                                        driver=search_again(driver,all_kechengs,all_stat,handle,all_class_type)
+                                        sleep(0.5)
                                     except Exception as e:
                                         logger.info(e.__class__.__name__)
                                         logger.info(str(e)+'Error! 好像抢课程：'+str(kechengs[stat[handle][1]])+'中出现了些什么问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!'+str(temp2.text))
@@ -468,10 +476,41 @@ def simulater(mode,on_time,old_kechengs,old_class_type,kechengs,class_type,times
                                 logger.info(str(kechengs[stat[handle][1]])+' try_time== '+str(q+1)+' failed '+status.text)
                                 logger.info('failed because of :'+str(e.__class__.__name__)+str(e)+' Retrying!')
             if q==times-1 or 0 not in st:break
+        except StaleElementReferenceException:
+            waittime+=0.05
+            logger.info('服务器不稳定，将在此后稍许延长等待时间为： '+str(0.35+waittime)+' 秒试试')
+            driver=search_again(driver,all_kechengs,all_stat,handle,all_class_type)
+            failcount+=1
+            all_window_handles = driver.window_handles
+            for handle in all_window_handles:
+                if handle !=origin:
+                    driver.switch_to.window(handle)
+                    driver.implicitly_wait(0.5)
+                    driver.close()
+            driver.switch_to.window(origin)
+            driver.implicitly_wait(0.5)
+            sleep(1)
+
+        except ElementClickInterceptedException:
+            waittime+=0.05
+            logger.info('服务器不稳定，将在此后稍许延长等待时间为： '+str(0.35+waittime)+' 秒试试')
+            driver=search_again(driver,all_kechengs,all_stat,handle,all_class_type)
+            failcount+=1
+            all_window_handles = driver.window_handles
+            for handle in all_window_handles:
+                if handle !=origin:
+                    driver.switch_to.window(handle)
+                    driver.implicitly_wait(0.5)
+                    driver.close()
+            driver.switch_to.window(origin)
+            driver.implicitly_wait(0.5)
+            sleep(1)        
+        
         except Exception as e:
             failcount+=1
+            traceback.print_exc()
             if failcount==1 and q>800: sleep(5)
-            logger.info('程序第'+str(failcount)+'次异常，异常原因：'+str(e.__class__.__name__)+str(e)+' 重试中...')
+            logger.info('程序第'+str(failcount)+'次异常，异常原因：'+str(e.__class__.__name__)+'  '+str(e)+' 重试中...')
             all_window_handles = driver.window_handles
             for handle in all_window_handles:
                 if handle !=origin:
