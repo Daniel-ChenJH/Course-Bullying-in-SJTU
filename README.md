@@ -1,4 +1,7 @@
 # Welcome to Course-Bullying-in-SJTU-v4.0！
+This is a project that aims to help the students to choose the course that they like within the limited quotas.
+The program can keep monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
+
 
 ## 2021/7/6 v4.0 更新说明
 
