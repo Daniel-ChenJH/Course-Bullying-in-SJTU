@@ -3,6 +3,16 @@ This is a project that aims to help the students to choose the course that they 
 The program can keep monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
 
 
+# 声明
+
+本程序仅针对上海交通大学**本科生**选课网站i.sjtu.edu.cn使用。
+
+作者(@Daniel-ChenJH)对可能使用本程序的潜在用户的行为不承担任何责任，使用本程序所带来的任何潜在风险均由使用者承担。
+
+目前学校尚不会对高刷的IP或Jaccount做封禁处理。
+
+当程序使用出现问题时，请先在“有头模式”下运行程序，观察网页变化试试。
+
 ## 2021/7/6 v4.0 更新说明
 
 1. **编写了GUI界面并与原脚本对接，提供更好的用户体验，打包好的exe文件可直接运行。**
@@ -69,11 +79,6 @@ The program can keep monitoring the number of remaining places of courses in rea
 
 ---
 
-# 声明
-
-作者(@Daniel-ChenJH)对可能使用本程序的潜在用户的行为不承担任何责任。
-
-目前，学校不会禁止短时间内多次刷新的IP或Jaccount，所以您可以放心使用。
 
 # 使用方法
 
