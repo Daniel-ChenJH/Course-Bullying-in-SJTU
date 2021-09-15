@@ -1,7 +1,7 @@
-# Welcome to Course-Bullying-in-SJTU-v4.0！
+# Welcome to Course-Bullying-in-SJTU-v4.1！
+
 This is a project that aims to help the students to choose the course that they like within the limited quotas.
 The program can keep monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
-
 
 # 声明
 
@@ -13,6 +13,13 @@ The program can keep monitoring the number of remaining places of courses in rea
 
 当程序使用出现问题时，请先在“有头模式”下运行程序，观察网页变化试试。
 
+# 2021/9/15 v4.1 更新说明
+
+1. 加入了中途终止抢课脚本的选项。
+2. 提升了程序稳定性。
+3. “替换抢课”模式的稳定性与成功率经过实战检验已经大大提升。
+4. 中途终止抢课时，可能会出现“Connection pool is full, discarding connection”或“[WinError 10061] 由于目标计算机积极拒绝，无法连接。”的输出。可以不用理会，程序会在短时间内输出“程序被使用者主动终止！”。此后，程序即可继续正常运行。
+
 ## 2021/7/6 v4.0 更新说明
 
 1. **编写了GUI界面并与原脚本对接，提供更好的用户体验，打包好的exe文件可直接运行。**
@@ -20,7 +27,6 @@ The program can keep monitoring the number of remaining places of courses in rea
 3. **更新后程序暂时不再开源，目前只支持Windows10用户。**另外，请勿在开启VPN代理情况下使用本程序！****
 4. **打包发布的exe文件不需其他任何依赖即可使用，所有操作都将在exe文件的用户界面中完成。**
 5. qiangke_log_file.log 文件的生成路径移动到了当前目录的user文件夹下。user文件夹会自动创建。
-6. 如有任何疑问请联系13760280318@163.com并说明来意。
 
 ## 2021/6/8 v3.1 更新说明
 
@@ -67,7 +73,7 @@ The program can keep monitoring the number of remaining places of courses in rea
 
 上海交通大学全自动抢课脚本，支持准点开抢与抢课后持续捡漏两种模式。2021/07/06更新v4.0版本。
 
-这是一个上海交通大学定时自动抢课系统，由Daniel-ChenJH(邮箱:13760280318@163.com)编写，于2021年2月25日首次编辑，2021年7月6日修改（最近）。
+这是一个上海交通大学定时自动抢课系统，由Daniel-ChenJH(邮箱:13760280318@163.com)编写，于2021年2月25日首次编辑，2021年9月15日修改（最近）。
 
 该可执行程序(Course-Bullying-in-SJTU.exe文件)目前只支持在Windows x86_64电脑上运行。该程序基于https://i.sjtu.edu.cn 网站的当前结构编写。 https://i.sjtu.edu.cn  是上海交通大学学生处理个人事务的网站，学生可以在此选择下学期的课程。
 
@@ -78,7 +84,6 @@ The program can keep monitoring the number of remaining places of courses in rea
 请注意不要经常使用这个程序，因为凭借它您几乎可以在任何时间持续刷新检查所有您想要的课程，您的同学可能会因此而生气。
 
 ---
-
 
 # 使用方法
 
@@ -101,31 +106,21 @@ The program can keep monitoring the number of remaining places of courses in rea
 
 5. 虽然本程序的模式1、模式2不会退掉您目前所选的课程，但还是强烈建议您确保您的目标课程预期时间表没有时间冲突。
 6. 点击'开始运行脚本'按钮启动进程，耐心等待程序运行，并仔细阅读程序日志。
-7. 若程序运行在'替换抢课'模式下并以任何形式终止，请您先自行登录教学信息服务网，并检查、尝试选课操作。请在自查一下四点后尝试再次运行程序。
-
-（1）您的jaccount信息完全正确！！！
-（2）完成所有上学期评教
-（3）您的课程信息输入均正确，这些课程目前都已经可以被选择，且与您目前的时间表没有时间冲突
-（4）您的网络环境良好
-
-8. 若因为抢课人数过多导致学校教学信息服务网服务器崩溃，本程序也无能为力。因此建议您在运行此程序的同时也自行前往教学信息服务网尝试抢课，以增加成功率。
+7. 若程序运行在'替换抢课'模式下并以任何形式终止，请您先自行登录教学信息服务网，并检查、尝试选课操作。
+8. **若因为抢课人数过多导致学校教学信息服务网服务器崩溃，本程序也无能为力。因此建议您在运行此程序的同时也自行前往教学信息服务网尝试抢课，以增加成功率。**
 9. 请注意，不要同时运行多次本程序，这有可能导致其中只有一个运行窗口能运行或产生异常。
 
 # 程序运行效果
 
-### 最新效果-GUI页面
+### 最新效果-GUI页面与成功案例
 
-![](image/README/1625564363259.png)
+![](image/README/1631711885080.png)
 
-![](image/README/1625564377648.png)
+![](image/README/1631711937748.png)
 
-![](image/README/1625564387419.png)
+![](image/README/1631711948312.png)
 
-![](image/README/1625564392279.png)
-
-程序的运行状况会被实时更新到位于当前目录下'user'文件夹中的log文件：qiangke_log_file.log中。
-
-![](image/README/1625564399292.png)
+注：程序的运行状况会被实时更新到位于当前目录下'user'文件夹中的log文件：qiangke_log_file.log中。
 
 # 鼓励--创作不易，请勿白嫖!
 
@@ -138,8 +133,8 @@ Daniel-ChenJH学艺尚浅，这是他个人在Github的第一个大项目。
 
 祝君好运!
 
-Daniel-ChenJH,  
-2021.07.06.
+Daniel-ChenJH,
+2021.09.15.
 
 # 联系
 
