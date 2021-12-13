@@ -22,6 +22,7 @@ from time import sleep
 import os,shutil
 import time
 import datetime
+import subprocess
 import zipfile
 import inspect
 import tkinter.messagebox 
@@ -48,6 +49,12 @@ __pl=sys.platform
 pl  = 'linux' if __pl.startswith(
         'linux') else 'mac' if __pl == 'darwin' else 'win'
 
+# 用于执行命令行命令
+def shell(cmd):
+         output, errors = subprocess.Popen(
+                  cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+         o = output if output else errors
+         return o.decode('utf-8')
 
 def retrieve_name(var):
         """
@@ -576,6 +583,10 @@ def check_newest_version(old_ver):
                     tk.messagebox.showinfo('提示','更新完成！请手动退出本程序后运行更新版程序： Course-Bullying-in-SJTU-'+new_ver+' ！')
                     files= os.listdir(os.getcwd())
                     for f in files:
+                        if pl=='mac':
+                            if 'MAC' in f and 'SJTU' in f and new_ver in f:
+                                cmd = r'chmod +x '+os.path.join(os.getcwd(),f)
+                                info=shell(cmd)
                         if newtime not in f:
                             try: 
                                 if 'README.md' in f: os.remove(f)
