@@ -1,30 +1,32 @@
-# Welcome to Course-Bullying-in-SJTU-v4.2！
+# Welcome to Course-Bullying-in-SJTU-v5.0！
 
 This is a project that aims to help the students to choose the course that they like within the limited quotas.
 The program can keep monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
 
 # 声明
 
-本程序仅针对上海交通大学**本科生**选课网站i.sjtu.edu.cn使用。
+本程序仅针对上海交通大学**本科生**选课网站https://i.sjtu.edu.cn使用。
 
 作者(@Daniel-ChenJH)对可能使用本程序的潜在用户的行为不承担任何责任，使用本程序所带来的任何潜在风险均由使用者承担。
 
 当程序使用出现问题时，请先在“有头模式”下运行程序，观察网页变化试试。若实在无法解决，请邮件联系作者13760280318@163.com寻求帮助。
 
-# 2021/12/09 v4.2 更新说明
+# 2021/12/13 v5.0 重大更新说明
 
 1. **获取登录二维码的网站结构发生变化，程序做了相应改动。这意味着旧版本的抢课软件已经不可用，请在更新至最新版本后使用。**
-2. 提升了程序稳定性，优化了代码逻辑，添加了检测Chrome浏览器版本与驱动版本的对应关系检查。
-3. 在程序面板添加了“打赏作者”渠道。
-4. “替换抢课”模式的稳定性与成功率经过实战检验已经大大提升，获得好评。
-5. 中途终止抢课时，可能会出现“Connection pool is full, discarding connection”或“[WinError 10061] 由于目标计算机积极拒绝，无法连接。”的输出。可以不用理会，程序会在短时间内输出“程序被使用者主动终止！”。此后，程序即可继续正常运行。
-6. 源代码仍暂不开源。目前程序只支持Windows64位系统，Mac OS版本正在开发中。
+2. **增加了对Mac OS系统的支持，至此程序已支持在Windows64和Mac两大主流操作系统上运行。**
+3. **源代码重新开源。**
+4. **添加了检测Chrome浏览器版本与驱动版本的对应关系检查。检查模块的部分代码来自Gitee社区开发者“少年二师兄”（@z417）的项目“selenium-webdriver-manager”,在此表示感谢。**
+5. 在程序面板添加了“打赏作者”渠道。
+6. “替换抢课”模式的稳定性与成功率经过实战检验已经大大提升，获得好评。
+7. 中途终止抢课时，可能会出现“Connection pool is full, discarding connection”或“[WinError 10061] 由于目标计算机积极拒绝，无法连接。”的输出。可以不用理会，程序会在短时间内输出“程序被使用者主动终止！”。此后，程序即可继续正常运行。
+8. 提升了程序稳定性，优化了代码逻辑。
 
 # 使用说明
 
-上海交通大学全自动抢课脚本，支持准点开抢、持续捡漏、替换抢课三种模式，由Daniel-ChenJH(邮箱:13760280318@163.com)编写，于2021年2月25日首次编辑，2021年12月09日修改（最近）。
+上海交通大学全自动抢课脚本，支持准点开抢、持续捡漏、替换抢课三种模式，由Daniel-ChenJH(邮箱:13760280318@163.com)编写，于2021年2月25日首次编辑，2021年12月13日修改（最近）。
 
-该可执行程序(Course-Bullying-in-SJTU.exe文件)目前只支持在Windows x86_64电脑上运行。该程序基于https://i.sjtu.edu.cn 网站的当前结构编写。 https://i.sjtu.edu.cn  是上海交通大学本科生处理个人事务的网站，学生可以在此选择下学期的课程。
+本程序基于https://i.sjtu.edu.cn 网站的当前结构编写。 https://i.sjtu.edu.cn  是上海交通大学本科生处理个人事务的网站，学生可以在此选择下学期的课程。
 
 通过使用这个程序，您将能够立即选择您指定的课程。如果您想选择的课程目前已经满员,程序将会持续刷新网站页面,以每分钟80次左右的刷新速度检查是否有剩余名额,一旦有空余名额,程序将立即帮您选择这门课。
 
@@ -35,7 +37,7 @@ The program can keep monitoring the number of remaining places of courses in rea
 # 使用方法
 
 1. 确保您的网络环境正常未使用VPN，电脑上安装好了Chrome浏览器且运转正常。
-2. 解压本程序，并按照程序页面提示操作即可。
+2. 解压本程序。Windows系统请运行文件：WIN64-Course-Bullying-in-SJTU.exe，MAC系统请运行文件：MAC-Course-Bullying-in-SJTU，并按照程序页面提示操作即可。
 3. **若因为抢课人数过多导致学校教学信息服务网服务器崩溃，本程序也无能为力。因此建议您在运行此程序的同时也自行前往教学信息服务网尝试抢课，以增加成功率。**
 4. 请注意，不要同时运行多次本程序，这有可能导致其中只有一个运行窗口能运行或产生异常。
 
@@ -73,15 +75,15 @@ The program can keep monitoring the number of remaining places of courses in rea
 
 ### 最新效果-GUI页面与成功案例
 
-![](image/README/1631711885080.png)
-
 ![](image/README/1631711937748.png)
+
+![](image/README/1639378558271.png)
 
 ![](image/README/1631711948312.png)
 
 注：程序的运行状况会被实时更新到位于当前目录下'user'文件夹中的log文件：qiangke_log_file.log中。
 
-# 鼓励--创作不易，请勿白嫖!
+# 鼓励--创作不易，请勿白嫖
 
 Daniel-ChenJH学艺尚浅，这是他个人在Github的第一个大项目。
 
@@ -93,7 +95,7 @@ Daniel-ChenJH学艺尚浅，这是他个人在Github的第一个大项目。
 祝君好运!
 
 Daniel-ChenJH,
-2021.12.09.
+2021.12.13.
 
 # 联系
 
