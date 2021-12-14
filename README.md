@@ -37,7 +37,7 @@ The program can keep monitoring the number of remaining places of courses in rea
 # 使用方法
 
 1. **确保您的网络环境正常未使用VPN，电脑上安装好了Chrome浏览器且运转正常。**
-2. 解压本程序。Windows系统请运行文件：WIN64-Course-Bullying-in-SJTU.exe，MAC系统请运行文件：MAC-Course-Bullying-in-SJTU，并按照程序页面提示操作即可。
+2. 解压本程序。Windows系统请运行文件：WIN64-Course-Bullying-in-SJTU.exe，MAC系统请运行文件：MAC-Course-Bullying-in-SJTU.dmg，并按照程序页面提示操作即可。
 3. **若因为抢课人数过多导致学校教学信息服务网服务器崩溃，本程序也无能为力。因此建议您在运行此程序的同时也自行前往教学信息服务网尝试抢课，以增加成功率。**
 4. 请注意，不要同时运行多次本程序，这有可能导致其中只有一个运行窗口能运行或产生异常。
 5. 对MAC OS用户的特殊说明：
@@ -80,6 +80,8 @@ The program can keep monitoring the number of remaining places of courses in rea
 
 ![](image/README/1631711937748.png)
 
+![](image/README/1639450889068.png)
+
 ![](image/README/1639378558271.png)
 
 ![](image/README/1631711948312.png)
@@ -97,7 +99,7 @@ Daniel-ChenJH学艺尚浅，这是他个人在Github的第一个大项目。
 
 祝君好运!
 
-Daniel-ChenJH,  
+Daniel-ChenJH,
 2021.12.13.
 
 # 联系
