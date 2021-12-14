@@ -583,10 +583,10 @@ def check_newest_version(old_ver):
                     tk.messagebox.showinfo('提示','更新完成！请手动退出本程序后运行更新版程序： Course-Bullying-in-SJTU-'+new_ver+' ！')
                     files= os.listdir(os.getcwd())
                     for f in files:
-                        if pl=='mac':
-                            if 'MAC' in f and 'SJTU' in f and new_ver in f:
-                                cmd = r'chmod +x '+os.path.join(os.getcwd(),f)
-                                info=shell(cmd)
+                        # if pl=='mac':
+                        #     if 'MAC' in f and 'SJTU' in f and new_ver in f:
+                        #         cmd = r'chmod +x '+os.path.join(os.getcwd(),f)
+                        #         info=shell(cmd)
                         if newtime not in f:
                             try: 
                                 if 'README.md' in f: os.remove(f)
