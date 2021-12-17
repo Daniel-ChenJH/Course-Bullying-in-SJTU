@@ -469,8 +469,7 @@ def check_chrome():
     elif pl=='mac':f.write('[driver]\nabsPath=user/chromedriver\nurl=http://npm.taobao.org/mirrors/chromedriver')
     f.close()
 
-    logger.info("程序启动成功！\n\nCourse-Bullying-in-SJTU: On-Time Automatic Class Snatching System\n\nAuthor:\t@ Daniel-ChenJH (email address: 13760280318@163.com)\nFirst Published on Februry 25th, 2021 , current version: "+current_version+" .\n\nPlease read file \'readme.md\' carefully before running the program!!!\nThe efficiency of this program depend on your network environment and your PC\'s capability.\n")
-    logger.info('正在进行使用必须的前期准备...')
+    logger.info("程序启动成功！\n\nCourse-Bullying-in-SJTU: On-Time Automatic Class Snatching System\n\nAuthor:\t@ Daniel-ChenJH (email address: 13760280318@163.com)\nFirst Published on Februry 25th, 2021 , current version: "+current_version+" .\n\nPlease read file \'readme.md\' carefully before running the program!\n")
     c=chrome_checker('user/conf.ini',logger)
     if c.exp:
         tk.messagebox.showwarning('警告','Chrome浏览器驱动Chromedriver配置出现问题！\n请检查确认您的网络状况，并保证您没有使用VPN后重试！\n您也可以自行前往 https://npm.taobao.org/mirrors/chromedriver 下载对应版本驱动！')
@@ -485,10 +484,10 @@ download_url = "https://github.com/%s/archive/main.zip"
 
 def is_old(old_ver, name):
     # name：xxx/xxx
-    all_info = requests.get(api_url % name,timeout=5).json()
     # https://api.github.com/repos/Daniel-ChenJH/Course-Bullying-in-SJTU
     # print(api_url % name)
     try:
+        all_info = requests.get(api_url % name,timeout=5).json()
         new_time = time.mktime(time.strptime(all_info["updated_at"], "%Y-%m-%dT%H:%M:%SZ"))
         new_time=new_time+28800
         for any in all_info["topics"]:
@@ -503,8 +502,8 @@ def is_old(old_ver, name):
         else:
             return False,new_time,new_ver
     except:
-        # URL is limited
-        return False,'1','1'
+        # URL is limited or VPN is used
+        return False,'0','0'
 
 
 def download_newfile(name):
@@ -609,6 +608,10 @@ def check_newest_version(old_ver):
             else:
                 tk.messagebox.showwarning('警告','程序更新失败，请前往https://gitee.com/Daniel-ChenJH/Course-Bullying-in-SJTU自行下载最新版！')
                 sys.exit(0)
+    elif new_ver=='0':
+        message='程序检查更新失败，本程序版本为: '+current_version+'。请前往https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU自行检查更新！'
+        tk.messagebox.showwarning('警告',message)
+        logger.info(message)
     else:logger.info('当前程序已是最新版！')
 
 # def showtime():
