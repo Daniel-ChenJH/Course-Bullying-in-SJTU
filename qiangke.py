@@ -130,7 +130,7 @@ def login(driver,win,logger,monty,headless):
                 f1.close()         
                 break        
             except NoSuchElementException as e:
-                logger.info('登录失败，请再次扫码重试！（新的二维码将会弹出）')
+                logger.info('登录失败，请扫码新弹出的二维码重试！若二维码一段时间后仍未弹出，请检查你的网络环境后重新运行程序！')
                 driver.refresh()
                 sleep(1)
 
