@@ -1,15 +1,19 @@
 # Welcome to Course-Bullying-in-SJTU-v5.0！
 
-This is a project that aims to help the students to choose the course that they like within the limited quotas.
-The program can keep monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
+This is a project that aims to help SJTU undergraduates to choose the course they like within the limited quotas.
+The program keeps monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
 
 # 声明
 
-本程序仅针对上海交通大学**本科生**选课网站https://i.sjtu.edu.cn使用。
+本程序针对上海交通大学**本科生**选课网站https://i.sjtu.edu.cn使用。
 
 作者(@Daniel-ChenJH)对可能使用本程序的潜在用户的行为不承担任何责任，使用本程序所带来的任何潜在风险均由使用者承担。
 
-当程序使用出现问题时，请先在“有头模式”下运行程序，观察网页变化试试。若实在无法解决，请邮件联系作者13760280318@163.com寻求帮助。
+当程序使用出现问题时，请先在“有头模式下运行程序，观察网页变化试试。若实在无法解决，请邮件联系作者13760280318@163.com寻求帮助。
+
+**本程序基于Chrome浏览器的自动化测试原理，请确保您的电脑已经正确安装了Chrome浏览器！**
+
+**2021/12/28作者对WIN10版v5.0程序进行了优化。如您之前使用程序出现问题，请下载此版本再试，否则可以不用更换版本。**
 
 # 2021/12/13 v5.0 重大更新说明
 
@@ -84,7 +88,7 @@ The program can keep monitoring the number of remaining places of courses in rea
 
 ![](image/README/1639378558271.png)
 
-![](image/README/1631711948312.png)
+![img](image/README/1640697022720.png)![](image/README/1640697055479.png)
 
 注：程序的运行状况会被实时更新到位于当前目录下'user'文件夹中的log文件：qiangke_log_file.log中。
 
@@ -104,4 +108,4 @@ Daniel-ChenJH,
 
 # 联系
 
-对于任何使用问题或讨论，请随时联系13760280318@163.com，如果是关于程序运行失败的讨论，请于附件中加上您的使用日志log文件‘qiangke_log_file.log‘（在当前目录下的user文件夹中），并于邮件中注明具体是哪一次运行（程序开始运行的时间）出了问题。
+对于任何使用问题或讨论，请联系13760280318@163.com，如果是关于程序运行失败的讨论，请于附件中加上您的使用日志log文件‘qiangke_log_file.log‘（在当前目录下的user文件夹中），并于邮件中注明具体是哪一次运行（程序开始运行的时间）出了问题。
