@@ -25,10 +25,11 @@ class chrome_checker(Manager):
         # self.absPath = os.path.join(os.getcwd(),'user\chromedriver.exe')
         # self.url='http://npm.taobao.org/mirrors/chromedriver'
         self.url = self.conf.get('driver', 'url')
-        self.check_match_chrome()
-        self.chmod(self.absPath)
         self.logger=logger
         self.exp=0
+        self.chmod(self.absPath)
+
+        self.exp=self.check_match_chrome()
 
     def chromedriver_version(self):
         if not os.path.exists(self.absPath):
@@ -48,15 +49,18 @@ class chrome_checker(Manager):
             return 0
 
     def check_match_chrome(self):
-        c_v = super().browser_version(Browser_type.GOOGLE)
-        d_v = self.chromedriver_version()
+        try:c_v = super().browser_version(Browser_type.GOOGLE)
+        except:return 1  
+        try:d_v = self.chromedriver_version()
+        except:return 2
         if c_v == d_v:
             self.logger.info('Chrome and chromedriver are matched.')
             self.flag=1
         else:
             self.flag=0
             save_d = os.path.dirname(self.absPath)
-            self.get_chromedriver(c_v, save_d)
+            try:self.get_chromedriver(c_v, save_d)
+            except:return 3
 
     def get_chromedriver(self, __v, save_d):
         match_list = []

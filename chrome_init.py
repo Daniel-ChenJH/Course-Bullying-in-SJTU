@@ -14,6 +14,7 @@ import sys
 import time
 import tarfile
 import urllib.request
+import ssl
 import zipfile
 from configparser import RawConfigParser
 from enum import Enum
@@ -114,6 +115,7 @@ class Manager(metaclass=ManagerMetaClass):
             sys.exit(-1)
 
     def download_file(self, url, save_path):
+        ssl._create_default_https_context = ssl._create_unverified_context
         self.logger.info('will download from '+url)
         file = os.path.join(save_path, os.path.basename(url))
         self.logger.info('will save in '+file)
