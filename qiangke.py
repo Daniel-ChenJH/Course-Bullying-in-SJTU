@@ -47,6 +47,7 @@ def showpic(monty,count):
 
 def login(driver,win,logger,monty,headless):
     try:
+        count=0
         try:
             driver.get('https://i.sjtu.edu.cn/')        
             # 尝试使用cookie登录
@@ -92,10 +93,8 @@ def login(driver,win,logger,monty,headless):
         except TimeoutException:
             driver.execute_script('window.stop()')
         
-
         try:driver.get('https://i.sjtu.edu.cn/jaccountlogin')
         except TimeoutException:driver.execute_script('window.stop()')    
-        count=0
         while(1):
             try:
                 count+=1
@@ -138,6 +137,7 @@ def login(driver,win,logger,monty,headless):
         driver.implicitly_wait(5)
     except (WebDriverException,NoSuchWindowException,MaxRetryError):
         logger.info('\n\n程序被使用者主动终止！\n\n')
+        if count<=1:logger.info('请检查您的网络环境后再试！')
         sys.exit(0)
 
     return driver,origin
