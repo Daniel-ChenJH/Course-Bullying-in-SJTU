@@ -13,7 +13,11 @@ The program keeps monitoring the number of remaining places of courses in real t
 
 **本程序基于Chrome浏览器的自动化测试原理，请确保您的电脑已经正确安装了Chrome浏览器！**
 
-**2021/12/28作者对WIN10版v5.0程序进行了优化。如您之前使用程序出现问题，请下载此版本再试，否则可以不用更换版本。**
+# 2021/12/29 v5.1更新说明
+
+1. **如您之前使用程序出现问题，请下载此版本再试，否则可以不用更换版本。**
+2. 优化了报错提示，解决了大部分“Failed to script”类问题。
+3. 优化了程序的更新模块与Chrome检查模块。
 
 # 2021/12/13 v5.0 重大更新说明
 
