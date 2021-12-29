@@ -1,4 +1,4 @@
-# Welcome to Course-Bullying-in-SJTU-v5.0！
+# Welcome to Course-Bullying-in-SJTU-v5.1！
 
 This is a project that aims to help SJTU undergraduates to choose the course they like within the limited quotas.
 The program keeps monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
@@ -32,7 +32,7 @@ The program keeps monitoring the number of remaining places of courses in real t
 
 # 使用说明
 
-上海交通大学全自动抢课脚本，支持准点开抢、持续捡漏、替换抢课三种模式，由Daniel-ChenJH(邮箱:13760280318@163.com)编写，于2021年2月25日首次编辑，2021年12月13日修改（最近）。
+上海交通大学全自动抢课脚本，支持准点开抢、持续捡漏、替换抢课三种模式，由Daniel-ChenJH(邮箱:13760280318@163.com)编写，于2021年2月25日首次编辑，2021年12月29日修改（最近）。
 
 本程序基于https://i.sjtu.edu.cn 网站的当前结构编写。 https://i.sjtu.edu.cn  是上海交通大学本科生处理个人事务的网站，学生可以在此选择下学期的课程。
 
@@ -107,8 +107,8 @@ Daniel-ChenJH学艺尚浅，这是他个人在Github的第一个大项目。
 
 祝君好运!
 
-Daniel-ChenJH,
-2021.12.13.
+Daniel-ChenJH,  
+2021.12.29.
 
 # 联系
 
