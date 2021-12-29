@@ -2,14 +2,14 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   main.py
-@Time    :   2021/12/28 20:59:54
+@Time    :   2021/12/29 13:19:54
 @Author  :   Daniel Chen
-@Version :   5.0
+@Version :   5.1
 @Contact :   13760280318@163.com
 @Description :   Course-Bullying-in-SJTU 客户端GUI顶层实现
 '''
 
-current_version='v5.0'
+current_version='v5.1'
 
 # Headers to be included:
 import tkinter as tk
@@ -30,9 +30,10 @@ import base64
 import traceback
 import http.client
 import queue
-import re  # 正则模块
-# import urllib
-
+import re
+import urllib
+import zipfile
+import shutil
 
 from qiangke import qiangkemain
 from qiangkeicons import *
@@ -512,9 +513,8 @@ def is_old(old_ver):
         return False,'0','0'
 
 
-def download_newfile(name):
-    download_url = r"https://raw.githubusercontent.com/Daniel-ChenJH/Course-Bullying-in-SJTU/main/WIN64-Course-Bullying-in-SJTU-"+name+'.exe' if pl=='win' \
-        else r"https://raw.githubusercontent.com/Daniel-ChenJH/Course-Bullying-in-SJTU/main/MAC-Course-Bullying-in-SJTU-"+name+'.dmg'
+def download_newfile():
+    download_url = "https://ghproxy.com/https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU/archive/WIN64.zip" if pl=='win' else "https://ghproxy.com/https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU/archive/MAC.zip"
     status=request_big_data(download_url)
     return status
 
@@ -531,27 +531,23 @@ def request_big_data(url):
     name = url.split('/')[-1]
     # 获取文件名
     try:
-        size=6500
-        # try:
-        #     size=int(urllib.request.urlopen(url,timeout=3).headers['content-length'])/2048
-        #     print('size='+str(size/512))
-        # except :pass
-        # print(url)
-        # pingtime=ping('185.199.110.133')
-        # logger.info(pingtime)
-        r = requests.get(url, stream=True,timeout=20)
-        # stream=True 设置为流读取
-        with open(str(name), "wb") as pdf:
-            i=0
-            for chunk in r.iter_content(chunk_size=2048):
-                # 每2048个字节为一块进行读取
-                if chunk:
-                    # 如果chunk不为空
-                    if size!=0 and i%1024==0: process_bar(round((i+1),1),size, '更新进度', auto_rm=True)
-                    pdf.write(chunk)
-                    i=i+1
-        # for i in range(100):
-        #     process_bar(i+1,100, '更新进度', auto_rm=True)
+        try:size=int(urllib.request.urlopen(url,timeout=5).headers['content-length'])/1024
+        except:size=12110 if pl=='win' else 29400
+        finally:
+            logger.info('更新中，文件大小： '+str(round(size/1024,2))+' MB')
+            r = requests.get(url, stream=True,timeout=10)
+            # stream=True 设置为流读取
+            with open("new-"+str(name), "wb") as pdf:
+                i=0
+                a=time.time()
+                for chunk in r.iter_content(chunk_size=512):
+                    # 每2048个字节为一块进行读取
+                    if chunk:
+                        # 如果chunk不为空
+                        if i%2400==0: process_bar(i/2,int(size), '更新进度', auto_rm=True)
+                        pdf.write(chunk)
+                        i=i+1
+            logger.info('更新用时（秒）：'+str(round(time.time()-a,2)))
         return True
     except requests.exceptions.ConnectionError:
         logger.warning(traceback.format_exc())
@@ -570,24 +566,34 @@ def check_newest_version(old_ver):
     
     ttk.Label(monty, text="请注意，若选择替换抢课模式，则请按照希望把\n第二行替换成第一行、希望把第四行替换\n成第三行的顺序正确填写！\n请务必在初次使用前校准时间\nMac系统需自行调整系统时间！").grid(column=1, row=2, sticky='W')
     if pl=='mac':
-        head='MAC-' 
-        end=''
+        head='MAC' 
+        end='.dmg'
     elif pl=='win':
-        head='WIN64-'
+        head='WIN64'
         end='.exe'
-    cur_file=head+'Course-Bullying-in-SJTU-' +current_version.replace('.','_')+end
+    cur_file=head+'-Course-Bullying-in-SJTU-' +current_version.replace('.','_')+end
     old,newtime,new_ver = is_old(old_ver)
     if old:
         newtime = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.localtime(newtime))
         a=tkinter.messagebox.askquestion('提示', '发现程序于 '+newtime+' 更新: '+new_ver+' 版，本程序目前为: v'+old_ver[1]+'_'+old_ver[3]+' 版，请问是否下载更新？')
         if a=='yes':
             logger.info('下载新版中，耗时大约20秒，请耐心等待......')
-            new_file=head+'Course-Bullying-in-SJTU-' +new_ver+end
-
-            if download_newfile(new_ver):
+            new_file=head+'-Course-Bullying-in-SJTU-' +new_ver+end
+            if download_newfile():
                 try:
-                    logger.info('更新完成！请手动退出本程序后运行更新版程序！')
-                    tk.messagebox.showinfo('提示','更新完成！更新版程序： Course-Bullying-in-SJTU-'+new_ver+' ！')
+                    file_name='new-'+head+'.zip'
+                    file_zip = zipfile.ZipFile(file_name, 'r')
+                    for file in file_zip.namelist():
+                        file_zip.extract(file)
+                    file_zip.close()
+                    os.remove(file_name)    
+                    for f in os.listdir('Course-Bullying-in-SJTU-'+head):
+                        shutil.move('Course-Bullying-in-SJTU-'+head+'/'+f,f)
+                    shutil.rmtree('Course-Bullying-in-SJTU-'+head, ignore_errors=True, onerror=None)
+                    logger.info('更新完成！请使用更新版程序： Course-Bullying-in-SJTU-'+new_ver+' ！')
+                    logger.info('新版保存地址：'+os.getcwd()+'/'+head+'-Course-Bullying-in-SJTU-'+new_ver+end)
+
+                    tk.messagebox.showinfo('提示','更新完成！请使用更新版程序： Course-Bullying-in-SJTU-'+new_ver+' ！')
                     if pl=='win':
                         # 更新bat文件
                         fp=open(os.path.join(os.getcwd(),'refresh.bat'),'w',encoding='utf-8')
