@@ -2,14 +2,14 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   main.py
-@Time    :   2021/12/29 13:19:54
+@Time    :   2022/2/14 10:53:12
 @Author  :   Daniel Chen
-@Version :   5.1
+@Version :   5.2
 @Contact :   13760280318@163.com
 @Description :   Course-Bullying-in-SJTU 客户端GUI顶层实现
 '''
 
-current_version='v5.1'
+current_version='v5.2'
 
 # Headers to be included:
 import tkinter as tk
@@ -474,15 +474,15 @@ def check_chrome():
     if pl=='win':check_admin()
 
     f=open("user/conf.ini",'w',encoding='utf-8')
-    if pl=='win':f.write('[driver]\nabsPath=user\chromedriver.exe\nurl=http://npm.taobao.org/mirrors/chromedriver')
-    elif pl=='mac':f.write('[driver]\nabsPath=user/chromedriver\nurl=http://npm.taobao.org/mirrors/chromedriver')
+    if pl=='win':f.write('[driver]\nabsPath=user\chromedriver.exe\nurl=https://chromedriver.storage.googleapis.com/')
+    elif pl=='mac':f.write('[driver]\nabsPath=user/chromedriver\nurl=https://chromedriver.storage.googleapis.com/')
     f.close()
 
     logger.info("-*-*-*-*-*-*-*-*-*-*-*-*-*-\n\n程序启动成功！程序版本号："+current_version+"\n\nCourse-Bullying-in-SJTU: On-Time Automatic Class Snatching System\n\nAuthor:\t@ Daniel-ChenJH (email address: 13760280318@163.com)\nFirst Published on Februry 25th, 2021 , current version: "+current_version+" .\n\nPlease read file \'readme.md\' carefully before running the program!\n")
     c=chrome_checker('user/conf.ini',logger)
     if c.exp==1:tk.messagebox.showwarning('警告','未安装Chrome浏览器或浏览器版本获取失败，请重新安装Chrome浏览器后再试！')
     if c.exp==2:tk.messagebox.showwarning('警告','Chromedriver版本获取失败，请删除\'user/chromedriver\'后再试！')
-    if c.exp==3:tk.messagebox.showwarning('警告','Chromedriver驱动下载失败！请自行前往 https://npm.taobao.org/mirrors/chromedriver 下载对应版本驱动，解压后放在user文件夹下！')
+    if c.exp==3:tk.messagebox.showwarning('警告','Chromedriver驱动下载失败！请自行前往 https://registry.npmmirror.com/binary.html?path=chromedriver 下载对应版本驱动，解压后放在user文件夹下！')
 
     if c.exp:
         logger.warning('Chrome配置环节出错，错误类型：'+str(c.exp))
