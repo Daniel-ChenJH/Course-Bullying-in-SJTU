@@ -65,28 +65,34 @@ class chrome_checker(Manager):
     def get_chromedriver(self, __v, save_d):
         match_list = []
         ot = 'win32' if 'win' in self.os_type else self.os_type
-        if 'taobao' in self.url:
+        # if  'registry.npmmirror.com' in self.url:
+        if  1:
+            # self.logger.info(self.url)
             rep = urllib.request.urlopen(self.url).read().decode('utf-8')
             # http://npm.taobao.org/mirrors/chromedriver/83.0.4103.39/chromedriver_win32.zip
             # '<a href="/mirrors/chromedriver/84.0.4147.30/">84.0.4147.30/</a>'
-            directory = re.compile(r'>(\d.*?/)</a>').findall(rep)
+            # directory = re.compile(r'>(\d.*?/)</a>').findall(rep)
+            directory = re.compile(r'<Key>(\d.*?/)').findall(rep)
+            # self.logger.info(rep)
             for i in directory:
                 if __v in i:
                     match_list.append(i)
+            # self.logger.info(match_list)
+            # self.logger.info(__v)
             dir_uri = urllib.parse.urljoin(f'{self.url}/', match_list[-1])
             driver_name = f'chromedriver_{ot}.zip'
             down_uri = urllib.parse.urljoin(dir_uri, driver_name)
-        else:
-            rep = urllib.request.urlopen(self.url).read().decode('utf-8')
-            root = ElementTree.fromstring(rep)
-            xmlns = '{http://doc.s3.amazonaws.com/2006-03-01}'
-            for child in root.findall(xmlns + 'Contents'):
-                key = child.find(xmlns + 'Key').text
-                if __v in key and 'chromedriver' in key:
-                    if ot in key:
-                        match_list.append(key)
-            driver_name = match_list[-1]
-            down_uri = urllib.parse.urljoin(self.url, driver_name)
+        # else:
+        #     rep = urllib.request.urlopen(self.url).read().decode('utf-8')
+        #     root = ElementTree.fromstring(rep)
+        #     xmlns = '{http://doc.s3.amazonaws.com/2006-03-01}'
+        #     for child in root.findall(xmlns + 'Contents'):
+        #         key = child.find(xmlns + 'Key').text
+        #         if __v in key and 'chromedriver' in key:
+        #             if ot in key:
+        #                 match_list.append(key)
+        #     driver_name = match_list[-1]
+        #     down_uri = urllib.parse.urljoin(self.url, driver_name)
         super().download_file(down_uri, save_d)
 
 
