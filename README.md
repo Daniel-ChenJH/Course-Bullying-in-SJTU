@@ -1,4 +1,4 @@
-# Welcome to Course-Bullying-in-SJTU-v5.1！
+# Welcome to Course-Bullying-in-SJTU-v5.2！
 
 This is a project that aims to help SJTU undergraduates to choose the course they like within the limited quotas.
 The program keeps monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
@@ -13,11 +13,9 @@ The program keeps monitoring the number of remaining places of courses in real t
 
 **本程序基于Chrome浏览器的自动化测试原理，请确保您的电脑已经正确安装了Chrome浏览器！**
 
-# 2021/12/29 v5.1更新说明
+# 2022/2/14 v5.2更新说明
 
-1. **如您之前使用程序出现问题，请下载此版本再试，否则可以不用更换版本。**
-2. 优化了报错提示，解决了大部分“Failed to script”类问题。
-3. 优化了程序的更新模块与Chrome检查模块。
+1. **Chromedriver镜像网站结构变化，程序做了对应的调整，v5.2之前的版本不再可用，请尽快更新到最新版本后使用。**
 
 # 2021/12/13 v5.0 重大更新说明
 
@@ -107,8 +105,8 @@ Daniel-ChenJH学艺尚浅，这是他个人在Github的第一个大项目。
 
 祝君好运!
 
-Daniel-ChenJH,  
-2021.12.29.
+Daniel-ChenJH,
+2022.2.14.
 
 # 联系
 
