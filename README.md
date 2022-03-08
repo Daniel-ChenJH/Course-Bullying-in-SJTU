@@ -3,34 +3,24 @@
 This is a project that aims to help SJTU undergraduates to choose the course they like within the limited quotas.
 The program keeps monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
 
+Total Hits:    [![](https://hits.b3log.org/Daniel-ChenJH/Course-Bullying-in-SJTU.svg)](https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU "Hits")
+
+
 # 声明
 
 本程序针对上海交通大学**本科生**选课网站https://i.sjtu.edu.cn使用。
 
 作者(@Daniel-ChenJH)对可能使用本程序的潜在用户的行为不承担任何责任，使用本程序所带来的任何潜在风险均由使用者承担。
 
-当程序使用出现问题时，请先在“有头模式下运行程序，观察网页变化试试。若实在无法解决，请邮件联系作者13760280318@163.com寻求帮助。
-
-**本程序基于Chrome浏览器的自动化测试原理，请确保您的电脑已经正确安装了Chrome浏览器！**
+当程序使用出现问题时，请先在"有头模式"下运行程序，观察网页变化试试。若实在无法解决，请邮件联系作者13760280318@163.com寻求帮助。
 
 # 2022/2/14 v5.2更新说明
 
 1. **Chromedriver镜像网站结构变化，程序做了对应的调整，v5.2之前的版本不再可用，请尽快更新到最新版本后使用。**
 
-# 2021/12/13 v5.0 重大更新说明
+# 程序说明
 
-1. **获取登录二维码的网站结构发生变化，程序做了相应改动。这意味着旧版本的抢课软件已经不可用，请在更新至最新版本后使用。**
-2. **增加了对Mac OS系统的支持，至此程序已支持在Windows64和Mac两大主流操作系统上运行。**
-3. **源代码重新开源。**
-4. **添加了检测Chrome浏览器版本与驱动版本的对应关系检查。检查模块的部分代码来自Gitee社区开发者“少年二师兄”（@z417）的项目“selenium-webdriver-manager”,在此表示感谢。**
-5. 在程序面板添加了“打赏作者”渠道。
-6. “替换抢课”模式的稳定性与成功率经过实战检验已经大大提升，获得好评。
-7. 中途终止抢课时，可能会出现“Connection pool is full, discarding connection”或“[WinError 10061] 由于目标计算机积极拒绝，无法连接。”的输出。可以不用理会，程序会在短时间内输出“程序被使用者主动终止！”。此后，程序即可继续正常运行。
-8. 提升了程序稳定性，优化了代码逻辑。
-
-# 使用说明
-
-上海交通大学全自动抢课脚本，支持准点开抢、持续捡漏、替换抢课三种模式，由Daniel-ChenJH(邮箱:13760280318@163.com)编写，于2021年2月25日首次编辑，2021年12月29日修改（最近）。
+本程序为上海交通大学全自动抢课脚本，可在Windows64和Mac两大主流操作系统上运行，支持准点开抢、持续捡漏、替换抢课三种模式，由Daniel-ChenJH(邮箱:13760280318@163.com)编写，于2021年2月25日首次推出。
 
 本程序基于https://i.sjtu.edu.cn 网站的当前结构编写。 https://i.sjtu.edu.cn  是上海交通大学本科生处理个人事务的网站，学生可以在此选择下学期的课程。
 
@@ -111,3 +101,7 @@ Daniel-ChenJH,
 # 联系
 
 对于任何使用问题或讨论，请联系13760280318@163.com，如果是关于程序运行失败的讨论，请于附件中加上您的使用日志log文件‘qiangke_log_file.log‘（在当前目录下的user文件夹中），并于邮件中注明具体是哪一次运行（程序开始运行的时间）出了问题。
+
+# 致谢
+
+本程序检测Chrome浏览器版本与驱动版本的对应情况的部分代码来自Gitee社区开发者“少年二师兄”（@z417）的项目“selenium-webdriver-manager”，在此表示感谢。
