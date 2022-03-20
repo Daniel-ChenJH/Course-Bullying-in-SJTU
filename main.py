@@ -2,14 +2,14 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   main.py
-@Time    :   2022/2/14 10:53:12
+@Time    :   2022/03/20 10:32:00
 @Author  :   Daniel Chen
-@Version :   5.2
+@Version :   5.3
 @Contact :   13760280318@163.com
 @Description :   Course-Bullying-in-SJTU 客户端GUI顶层实现
 '''
 
-current_version='v5.2'
+current_version='v5.3'
 
 # Headers to be included:
 import tkinter as tk
@@ -160,10 +160,10 @@ def clickMe():
     else:mode=2
 
     if mode!=3:
-        if class1.get()!='' :kechengs.append(class1.get().strip())
-        if class2.get()!='' :kechengs.append(class2.get().strip())
-        if class3.get()!='' :kechengs.append(class3.get().strip())
-        if class4.get()!='' :kechengs.append(class4.get().strip())
+        if class1.get()!='' :kechengs.append(class1.get().strip().replace('：',':'))
+        if class2.get()!='' :kechengs.append(class2.get().strip().replace('：',':'))
+        if class3.get()!='' :kechengs.append(class3.get().strip().replace('：',':'))
+        if class4.get()!='' :kechengs.append(class4.get().strip().replace('：',':'))
         if cate1.get()!='' :class_type.append(cate1.get().strip())
         if cate2.get()!='' :class_type.append(cate2.get().strip())
         if cate3.get()!='' :class_type.append(cate3.get().strip())
@@ -471,7 +471,6 @@ def setIcon():
     # os.remove("user/icon512.ico")
 
 def check_chrome():
-    if pl=='win':check_admin()
 
     f=open("user/conf.ini",'w',encoding='utf-8')
     if pl=='win':f.write('[driver]\nabsPath=user\chromedriver.exe\nurl=https://chromedriver.storage.googleapis.com/')
@@ -558,8 +557,25 @@ def request_big_data(url):
         logger.info('程序更新失败，请前往https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU自行下载！')
         return False
 
+def get_new_ver_info(url,new_ver):
+    info=urllib.request.urlopen(url,timeout=5).read().decode('utf-8')
+    a=info.find('更新说明')
+    b=0
+    for i in range(50):
+        if info[a-i]=='#':
+            b=a-i
+            break
+    c=b+info[b+1:].find('#')
+    d=b+info[b+1:].find('\n')
+    info=info[:d+1]+info[d+2:]
+    # print(info[b:c].strip())
+    return info[b:c].strip()
+
+
 def check_newest_version(old_ver):
     
+    if pl=='win':check_admin()
+
     # timethread=threading.Thread(target=showtime())
     # timethread.setDaemon(True)
     # timethread.start()
@@ -574,8 +590,10 @@ def check_newest_version(old_ver):
     cur_file=head+'-Course-Bullying-in-SJTU-' +current_version.replace('.','_')+end
     old,newtime,new_ver = is_old(old_ver)
     if old:
-        newtime = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.localtime(newtime))
-        a=tkinter.messagebox.askquestion('提示', '发现程序于 '+newtime+' 更新: '+new_ver+' 版，本程序目前为: v'+old_ver[1]+'_'+old_ver[3]+' 版，请问是否下载更新？')
+        url='https://cdn.jsdelivr.net/gh/Daniel-ChenJH/Course-Bullying-in-SJTU@main/README.md'
+        new_ver_info=get_new_ver_info(url,new_ver.replace('_','.'))
+        newtime = time.strftime("%Y-%m-%d %H:%M:%S ", time.localtime(newtime))
+        a=tkinter.messagebox.askquestion('提示', '发现程序于 '+newtime+' 更新: '+new_ver+' 版，本程序目前为: v'+old_ver[1]+'_'+old_ver[3]+' 版，请问是否下载更新？'+'\n'+new_ver_info)
         if a=='yes':
             logger.info('下载新版中，耗时大约20秒，请耐心等待......')
             new_file=head+'-Course-Bullying-in-SJTU-' +new_ver+end
@@ -648,8 +666,8 @@ def is_admin():
     except:
         return False
 
-check_chrome()
 check_newest_version(current_version)
+check_chrome()
 
 load_config()
 
