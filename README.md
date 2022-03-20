@@ -1,10 +1,9 @@
-# Welcome to Course-Bullying-in-SJTU-v5.2！
+# Welcome to Course-Bullying-in-SJTU-v5.3！
 
 This is a project that aims to help SJTU undergraduates to choose the course they like within the limited quotas.
 The program keeps monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
 
 Total Hits:    [![](https://hits.b3log.org/Daniel-ChenJH/Course-Bullying-in-SJTU.svg)](https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU "Hits")
-
 
 # 声明
 
@@ -14,9 +13,10 @@ Total Hits:    [![](https://hits.b3log.org/Daniel-ChenJH/Course-Bullying-in-SJTU
 
 当程序使用出现问题时，请先在"有头模式"下运行程序，观察网页变化试试。若实在无法解决，请邮件联系作者13760280318@163.com寻求帮助。
 
-# 2022/2/14 v5.2更新说明
+# 2022/3/20 v5.3更新说明
 
-1. **Chromedriver镜像网站结构变化，程序做了对应的调整，v5.2之前的版本不再可用，请尽快更新到最新版本后使用。**
+1. 程序提示更新时增加了更新说明的显示。
+2. 针对部分同学在抢选阶段由于忘记课号影响抢课效率的情况，在**“准点开抢”、“持续捡漏”**模式下添加了按“课程名：老师名”匹配原则。例如在课程名称处输入“体育：叶汉忠”、课程类别处输入“公共选修课”，程序会自动匹配得课号(2021-2022-3)-PE005-8并持续抢选。
 
 # 程序说明
 
@@ -44,7 +44,7 @@ Total Hits:    [![](https://hits.b3log.org/Daniel-ChenJH/Course-Bullying-in-SJTU
 
 ## 模式1：准点开抢
 
-**用于准点开放抢课。**
+**用于准点开放抢课。支持课号选课、课程名选课以及按“课程名：老师名”匹配原则选课。**
 
 由用户指定开抢的时间，格式为'%Y-%m-%d %H:%M:%S'。范例如：2021-05-24 17:35:20 。考虑到本程序登录系统需要时间，请在抢课开放前提前约30秒至1分钟即开始运行本程序。如果您希望程序一运行就立即开始抢课，您当然可以在此填入一个过去的时间。
 
@@ -52,11 +52,11 @@ Total Hits:    [![](https://hits.b3log.org/Daniel-ChenJH/Course-Bullying-in-SJTU
 
 ## 模式2：持续捡漏
 
-**用于抢课已经开放后持续查询。** 用户界面中指定开抢的时间那一栏将不被程序考虑。
+**用于抢课已经开放后持续查询。支持课号选课、课程名选课以及按“课程名：老师名”匹配原则选课。** 用户界面中指定开抢的时间那一栏将不被程序考虑。
 
 ## 模式3：替换抢课
 
-**注意！此处课程写法有关键变化！模式三建议只使用课号检索！**
+**注意！此处课程写法有关键变化！模式三只支持使用课号检索！**
 
 **当用户已经选上课程B时，他可能有一门更想去的但没法与B同时选择的课A，且课A此时已经属于满员状态。在模式3下程序将持续刷新课程A的情况，一旦发现A有空余名额，立即退掉B并选择A，即“替换抢课”。**
 
@@ -95,8 +95,8 @@ Daniel-ChenJH学艺尚浅，这是他个人在Github的第一个大项目。
 
 祝君好运!
 
-Daniel-ChenJH,
-2022.2.14.
+Daniel-ChenJH,  
+2022.3.20.
 
 # 联系
 
