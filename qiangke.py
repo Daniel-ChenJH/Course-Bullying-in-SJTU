@@ -1,10 +1,10 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   qiangke.py
-@Time    :   2021/06/26 21:26:00
+@Time    :   2022/03/19 18:32:00
 @Author  :   Daniel-ChenJH
 @Email   :   13760280318@163.com
-@Version    :   4.0
+@Version    :   5.3
 @Descriptions :   Course-Bullying-in-SJTU
                     上海交通大学全自动抢课脚本,请保证本机Windows10系统已经安装了Chrome浏览器
 '''
@@ -161,10 +161,15 @@ def search_in(logger,win,driver,mode,kechengs,stat,handle,class_type,new):
     if handle in new.keys():bias=0
     else:bias=len(new)
     classfind=False
+    cur_class=kechengs[stat[handle][1]+bias]
+    cur_teacher=''
+    if ':' in cur_class:cur_class,cur_teacher=cur_class.strip().split(':')
+    cur_class_type=class_type[stat[handle][1]+bias]
+
     try:
         inp = WebDriverWait(driver,1,0.1).until(lambda x:driver.find_element_by_xpath('//*[@id="searchBox"]/div/div[1]/div/div/div/div/input') )
         inp.clear()
-        inp.send_keys(kechengs[stat[handle][1]+bias])
+        inp.send_keys(cur_class)
         # print('课程输入'+kechengs[stat[handle][1]+bias])
         go=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div/div/div/span/button[1]')
         go.click()
@@ -184,14 +189,14 @@ def search_in(logger,win,driver,mode,kechengs,stat,handle,class_type,new):
             logger.info(e)
         
     for type in types:
-        if class_type[stat[handle][1]+bias] in type.text:
+        if cur_class_type in type.text:
             type.click()
             classfind=True
             break
     if not classfind:
-        logger.info('课程： '+kechengs[stat[handle][1]+bias]+' 与类别：'+class_type[stat[handle][1]+bias]+'  关系对应出错，将暂时跳过此门课程（及其组合）！')
+        logger.info('课程： '+cur_class+' 与类别：'+cur_class_type+'  关系对应出错，将暂时跳过此门课程（及其组合）！')
         stat[handle][0]=4
-        return driver,classfind,stat
+        return driver,classfind,stat,kechengs
 
     loc = (By.XPATH, '//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td[15]')
     try:
@@ -212,14 +217,34 @@ def search_in(logger,win,driver,mode,kechengs,stat,handle,class_type,new):
         rongliang=10+len(driver.find_elements_by_xpath("/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/thead/tr/th"))
         if rongliang==10 or kongcount==3:
             all_window_handles = driver.window_handles
-            logger.info('在类别：'+str(class_type[stat[handle][1]+bias])+' 下查找不到课程：'+str(kechengs[stat[handle][1]+bias])+' 将跳过此门课程（及其组合）！')
+            logger.info('在类别：'+str(cur_class_type)+' 下查找不到课程：'+str(cur_class)+' 将跳过此门课程（及其组合）！')
             stat[handle][0]=4
             if mode==3 and handle in new.keys():
                 stat[all_window_handles[new[handle][1]+len(new)+1]][0]=4
             elif mode==3:
                 stat[all_window_handles[all_window_handles.index(handle)-len(new)]][0]=4                
             break                             
-    return driver,classfind,stat
+    
+    
+    #带:号的老师检索
+    if cur_teacher:
+        classfind=False
+        total_classes=len(driver.find_elements_by_xpath('/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr'))
+        for i in range(1,total_classes+1):
+            xpath='/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(i)+']/td[13]'
+            teachers=driver.find_element_by_xpath(xpath)
+            if cur_teacher in teachers.text:
+                classfind=True
+                new_class=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(i)+']/td[12]/a')
+                kechengs[stat[handle][1]+bias]=new_class.text.strip()
+                driver=search_again(logger,driver,kechengs,stat,handle,class_type,{})
+                break
+    if not classfind:
+        logger.info('未找到老师：'+cur_teacher+' 任教的课程： '+cur_class+' ，将暂时跳过此门课程（及其组合）！')
+        stat[handle][0]=4
+    
+    return driver,classfind,stat,kechengs
+
 
 def search_again(logger,driver,kechengs,stat,handle,class_type,new):
     if handle in new.keys():bias=0
@@ -319,7 +344,10 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
                     # 第一次进入刷新，输入课程信息
                     if q==0 and handle!=origin and all_stat[handle][0]==0:
                         driver.switch_to.window(handle)
-                        driver,classfind,all_stat=search_in(logger,win,driver,mode,all_kechengs,all_stat,handle,all_class_type,stat)
+                        driver,classfind,all_stat,all_kechengs=search_in(logger,win,driver,mode,all_kechengs,all_stat,handle,all_class_type,stat)
+                        kechengs=all_kechengs[:len(kechengs)]
+                        old_kechengs=all_kechengs[len(kechengs):]
+
                         if mode==3 and handle in stat.keys() and not classfind:all_stat[all_window_handles[stat[handle][1]+len(kechengs)+1]][0]=4
                         if mode==3 and handle not in stat.keys() and not classfind:all_stat[all_window_handles[all_window_handles.index(handle)-len(kechengs)]][0]=4
                         for a,b in all_stat.items():
@@ -585,7 +613,7 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
         elif stat[all_window_handles[k+1]][0]==0:
             logger.info('课程： '+kechengs[k]+' 失败，直到程序终止都没能抢到此门课!'+add)    
         elif stat[all_window_handles[k+1]][0]==4:
-            if mode!=3:logger.info('课程： '+kechengs[k]+'失败，其与类别： '+class_type[k]+' 的对应关系出错!'+add) 
+            if mode!=3:logger.info('课程： '+kechengs[k]+'失败，其与老师名或类别： '+class_type[k]+' 的对应关系出错!'+add) 
             else:logger.info('课程替换组合： '+old_kechengs[k]+','+old_class_type[k]+' >>> '+kechengs[k]+','+class_type[k]+' 失败，这对课程组合存在课程与类别对应出错!'+add)       
             
     if 0 not in st and 3 not in st and 4 not in st:logger.info('无!\n')
