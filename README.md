@@ -1,4 +1,4 @@
-# Welcome to Course-Bullying-in-SJTU-v5.3！
+# Welcome to Course-Bullying-in-SJTU-v5.4！
 
 This is a project that aims to help SJTU undergraduates to choose the course they like within the limited quotas.
 The program keeps monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
@@ -13,10 +13,12 @@ Total Hits:    [![](https://hits.b3log.org/Daniel-ChenJH/Course-Bullying-in-SJTU
 
 当程序使用出现问题时，请先在"有头模式"下运行程序，观察网页变化试试。若实在无法解决，请邮件联系作者13760280318@163.com寻求帮助。
 
-# 2022/3/20 v5.3 WIN64版本更新说明
+# 2022/06/01 v5.4 版本更新说明
 
-1. 程序提示更新时增加了更新说明的显示。
-2. 针对部分同学在抢选阶段由于忘记课号影响抢课效率的情况，在**“准点开抢”、“持续捡漏”**模式下添加了按“课程名：老师名”匹配原则。例如在课程名称处输入“体育：叶汉忠”、课程类别处输入“公共选修课”，程序会自动匹配得课号(2021-2022-3)-PE005-8并持续抢选。
+1. 优化了程序逻辑并增加了报错提示。
+2. 程序提示更新时增加了更新说明的显示。
+3. 针对部分同学在抢选阶段由于忘记课号影响抢课效率的情况，在“准点开抢”、“持续捡漏”模式下添加了按“课程名：老师名”匹配原则，程序会自动匹配出相应课号并持续抢选。
+4. 增加了“彩蛋模式”hhh，有兴趣而且需要使用的可以问问作者。
 
 # 程序说明
 
@@ -95,8 +97,8 @@ Daniel-ChenJH学艺尚浅，这是他个人在Github的第一个大项目。
 
 祝君好运!
 
-Daniel-ChenJH,
-2022.3.20.
+Daniel-ChenJH,  
+2022.06.01.
 
 # 联系
 
