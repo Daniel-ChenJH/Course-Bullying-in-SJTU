@@ -2,14 +2,14 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   main.py
-@Time    :   2022/03/20 10:32:00
+@Time    :   2022/06/01 15:00:00
 @Author  :   Daniel Chen
-@Version :   5.3
+@Version :   5.4
 @Contact :   13760280318@163.com
 @Description :   Course-Bullying-in-SJTU 客户端GUI顶层实现
 '''
 
-current_version='v5.3'
+current_version='v5.4'
 
 # Headers to be included:
 import tkinter as tk
@@ -41,15 +41,21 @@ from ToolTip import createToolTip
 from loggetter import loggetter,scrolltest
 from chrome_checker import chrome_checker
 
+# 全局变量声明
 global q
 q = queue.Queue()
+global righttime
+righttime=False
+global img_png         
+global img_png2        
+global logger
+
 
 version_re = re.compile(r'^[1-9]\d*\.\d*.\d*')  # 匹配前3位版本号的正则表达式
 
 # 操作系统检测
 __pl=sys.platform
-pl  = 'linux' if __pl.startswith(
-        'linux') else 'mac' if __pl == 'darwin' else 'win'
+pl  = 'linux' if __pl.startswith('linux') else 'mac' if __pl == 'darwin' else 'win'
 
 # 用于执行命令行命令
 def shell(cmd):
@@ -78,8 +84,8 @@ def isChinese(word):
 
 def load_config():
     if not os.path.exists('user/config.ini'):
-        starttime.set('2021-07-06 00:00:00')
-        maxtime.set('1000')
+        starttime.set('2022-06-01 00:00:00')
+        maxtime.set('100000')
     else:
         f=open('user/config.ini','r',encoding='utf-8')
         data = f.readlines()
@@ -110,6 +116,7 @@ class MyThread(threading.Thread):
     self.class_type=class_type
     self.old_kechengs=old_kechengs
     self.old_class_type=old_class_type
+    self.caidan=False
     self.driver=None
       
   def run(self):
@@ -132,7 +139,7 @@ class MyThread(threading.Thread):
     elif pl=='mac':self.driver = webdriver.Chrome(options=option,executable_path=os.path.join(os.getcwd(),'user/chromedriver'))
     self.driver.set_page_load_timeout(5)
 
-    qiangkemain(self.driver,self.action,self.logger,self.win,self.monty,self.headless,self.mode,self.on_time,self.times,self.kechengs,self.class_type,self.old_kechengs,self.old_class_type)
+    qiangkemain(self.driver,self.action,self.logger,self.win,self.monty,self.headless,self.mode,self.on_time,self.times,self.kechengs,self.class_type,self.old_kechengs,self.old_class_type,self.caidan)
    
   def setFlag(self,parm):     #外部停止线程的操作函数
     self.Flag=parm #boolean
@@ -189,7 +196,7 @@ def clickMe():
             action.configure(state='enabled')    # Disable the Button Widget
             return
     else:
-        on_time='2021-07-06 00:00:00'
+        on_time='2022-06-01 00:00:00'
         on_time=datetime.datetime.strptime(on_time,'%Y-%m-%d %H:%M:%S')
 
     if maxtime.get().strip()!='':
@@ -202,10 +209,10 @@ def clickMe():
             action.configure(text="确认配置并开始运行")
             action.configure(state='enabled')    # Disable the Button Widget
             return
-    else:times=1000
+    else:times=100000
     head=look.get().strip()
-    if '无头' in head:headless=True
-    else:headless=False
+    if '有头' in head:headless=False
+    else:headless=True
 
     if len(kechengs)!=len(class_type) or len(old_kechengs) != len(old_class_type):
         action.configure(text='脚本出错')
@@ -246,6 +253,8 @@ def clickMe():
     q.put(time.time())
     q.put(qiangkethread)
 
+    global righttime
+
     qiangkethread.action=action
     qiangkethread.logger=logger
     qiangkethread.win=win
@@ -258,21 +267,12 @@ def clickMe():
     qiangkethread.class_type=class_type
     qiangkethread.old_kechengs=old_kechengs
     qiangkethread.old_class_type=old_class_type
+    qiangkethread.caidan=True if (times==149248 and mode!=3 and '彩蛋' in head) else False
 
     qiangkethread.start()
     # print(qiangkethread.is_alive())   
+    if qiangkethread.caidan: action.configure(text='狂暴模式运行中')
     action3.configure(state='enabled')    # Disable the Button Widget
-
-def quitting():
-    logger.info("Please 'Star' the program of Daniel-ChenJH on Github if you think it's a quite good one. ")   
-    logger.info('Link to \'Course-Bullying-in-SJTU\' in Github : https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU')
-
-    my_file = 'user/qrcode.jpg' # 文件路径
-    if os.path.exists(my_file): # 如果文件存在
-        os.remove(my_file) # 则删除    
-    logger.info('程序已完成！请立即自行移步至教学信息服务网 https://i.sjtu.edu.cn 查询确认抢课结果！\n\n')
-    tk.messagebox.showinfo('提示','程序正常结束！请务必仔细阅读程序日志！\n创作不易，请勿白嫖！\n如果您觉得本程序还不错，欢迎前往以下网站并点亮一个小星星！\nhttps://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU\n也欢迎您扫码程序面板右侧二维码打赏作者，感谢您的支持！')
-    # win.quit()
 
 def stop_qiangke():
     global q
@@ -292,6 +292,7 @@ def stop_qiangke():
     action3.configure(state='disabled')
 
 def get_webservertime():
+    global righttime
     host='www.baidu.com'
     conn=http.client.HTTPConnection(host)
     conn.request("GET", "/")
@@ -309,10 +310,8 @@ def get_webservertime():
     os.system(dat)
     os.system(tm)
     logger.info('系统时间校准成功!当前时间为：'+str(datetime.datetime.now())[:-7])
+    righttime=True
     # input()
-
-global img_png           # 定义全局变量 图像的
-global img_png2           # 定义全局变量 图像的
 
 # Create instance
 win = tk.Tk()   
@@ -346,12 +345,12 @@ def add_pic():
         label_Img.pack(padx=5, pady=0,fill='none', expand='no', side='right',anchor='center')
 
 # Changing our Label
-ttk.Label(monty, text="抢课开始时间（默认为2021-07-06 00:00:00）\n若需修改，请按照相同格式输入！").grid(column=0, row=0, sticky='W')
+ttk.Label(monty, text="抢课开始时间（默认为2022-06-01 00:00:00）\n若需修改，请按照相同格式输入！").grid(column=0, row=0, sticky='W')
 
 # Adding a Textbox Entry widget
 starttime = tk.StringVar()
 width=25
-# starttime.set('2021-07-06 00:00:00')
+# starttime.set('2022-06-01 00:00:00')
 starttimeEntered = ttk.Entry(monty, width=width, textvariable=starttime)
 starttimeEntered.grid(column=0, row=1, sticky='W')
 # Adding a Textbox Entry widget
@@ -383,7 +382,7 @@ cate4 = tk.StringVar()
 cate4Entered = ttk.Entry(monty, width=width, textvariable=cate4)
 cate4Entered.grid(column=1, row=6, sticky='W')
 
-ttk.Label(monty, text="输入最大刷新次数：（默认为1000）").grid(column=1, row=0, sticky='W')
+ttk.Label(monty, text="输入最大刷新次数：（默认为100000）").grid(column=1, row=0, sticky='W')
 maxtime = tk.StringVar()
 maxtimeEntered = ttk.Entry(monty, width=width, textvariable=maxtime)
 maxtimeEntered.grid(column=1, row=1, sticky='W')
@@ -391,7 +390,7 @@ maxtimeEntered.grid(column=1, row=1, sticky='W')
 # Adding a Combobox
 look = tk.StringVar()
 lookChosen = ttk.Combobox(monty, width=14, textvariable=look)
-lookChosen['values'] = ('无头模式(默认)', '有头模式(开发者)')
+lookChosen['values'] = ('无头模式(默认)', '有头模式(开发者)','彩蛋模式(狗头)')
 lookChosen.grid(column=2, row=2)
 lookChosen.current(0)  #设置初始显示值，值为元组['values']的下标
 lookChosen.config(state='readonly')  #设为只读模式
@@ -427,10 +426,7 @@ action3.configure(state='disabled')    # Disable the Button Widget
 
 if not os.path.exists('user'):os.mkdir('user')
 
-global logger
 logger=loggetter(scr)
-
-
 
 # Add Tooltip
 createToolTip(action,'运行脚本.')
@@ -477,16 +473,16 @@ def check_chrome():
     elif pl=='mac':f.write('[driver]\nabsPath=user/chromedriver\nurl=https://chromedriver.storage.googleapis.com/')
     f.close()
 
-    logger.info("-*-*-*-*-*-*-*-*-*-*-*-*-*-\n\n程序启动成功！程序版本号："+current_version+"\n\nCourse-Bullying-in-SJTU: On-Time Automatic Class Snatching System\n\nAuthor:\t@ Daniel-ChenJH (email address: 13760280318@163.com)\nFirst Published on Februry 25th, 2021 , current version: "+current_version+" .\n\nPlease read file \'readme.md\' carefully before running the program!\n")
+    logger.info("-*-*-*-*-*-*-*-*-*-*-*-*-*-\n\n程序启动成功！程序版本号："+current_version+"\n\nCourse-Bullying-in-SJTU: On-Time Automatic Class Snatching System\n\nAuthor:\t@ Daniel-ChenJH (13760280318@163.com)\nFirst Published on Februry 25th, 2021 , current version: "+current_version+" .\n\nPlease read file \'readme.md\' carefully before running the program!\n")
     c=chrome_checker('user/conf.ini',logger)
-    if c.exp==1:tk.messagebox.showwarning('警告','未安装Chrome浏览器或浏览器版本获取失败，请重新安装Chrome浏览器后再试！')
-    if c.exp==2:tk.messagebox.showwarning('警告','Chromedriver版本获取失败，请删除\'user/chromedriver\'后再试！')
-    if c.exp==3:tk.messagebox.showwarning('警告','Chromedriver驱动下载失败！请自行前往 https://registry.npmmirror.com/binary.html?path=chromedriver 下载对应版本驱动，解压后放在user文件夹下！')
 
+    cstr=['未安装Chrome浏览器或浏览器版本获取失败，请重新安装Chrome浏览器后再试！','chromedriver版本获取失败，请删除\'user/chromedriver\'后再试！','chromedriver驱动下载失败，请自行前往 https://registry.npmmirror.com/binary.html?path=chromedriver 下载对应版本驱动，解压后放在user文件夹下！']
+    
     if c.exp:
-        logger.warning('Chrome配置环节出错，错误类型：'+str(c.exp))
+        logger.warning('Chrome配置环节出错，错误类型：'+cstr[int(c.exp)-1])
         action.configure(text='无法运行')
         action.configure(state='disabled')    # Disable the Button Widget
+        tk.messagebox.showwarning('警告',cstr[int(c.exp)-1])
 
     setIcon()
     add_pic()
@@ -497,6 +493,7 @@ def is_old(old_ver):
     # name：xxx/xxx
     # https://api.github.com/repos/Daniel-ChenJH/Course-Bullying-in-SJTU
     # print(api_url % name)
+    old_ver=float(old_ver.split('v')[1])*10
     try:
         api_url = "https://api.github.com/repos/Daniel-ChenJH/Course-Bullying-in-SJTU"
         all_info = requests.get(api_url,timeout=5).json()
@@ -505,11 +502,16 @@ def is_old(old_ver):
         for any in all_info["topics"]:
             new_ver=int(any.split('v')[1]) if any.startswith('v') else 0
 
-        old_ver=float(old_ver.split('v')[1])*10
         return (new_ver > old_ver),new_time,'v'+str(new_ver)[0]+'_'+str(new_ver)[1]
     except:
         # URL is limited or VPN is used
-        return False,'0','0'
+        try:
+            url=r'https://ghproxy.com/https://raw.githubusercontent.com/Daniel-ChenJH/Course-Bullying-in-SJTU/main/README.md'
+            info=urllib.request.urlopen(url,timeout=5).read().decode('utf-8')
+            new_ver=float(info[info.find('Course-Bullying-in-SJTU'):info.find('！')].split('v')[-1])*10
+            return (new_ver > old_ver),'','v'+str(new_ver)[0]+'_'+str(new_ver)[1]
+        except:
+            return False,'0','0'
 
 
 def download_newfile():
@@ -557,26 +559,32 @@ def request_big_data(url):
         logger.info('程序更新失败，请前往https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU自行下载！')
         return False
 
-def get_new_ver_info(url,new_ver):
-    info=urllib.request.urlopen(url,timeout=5).read().decode('utf-8')
-    a=info.find('更新说明')
-    b=0
-    for i in range(50):
-        if info[a-i]=='#':
-            b=a-i
+def get_new_ver_info():
+    urls=[r'https://ghproxy.com/https://raw.githubusercontent.com/Daniel-ChenJH/Course-Bullying-in-SJTU/main/README.md',\
+        r'https://cdn.jsdelivr.net/gh/Daniel-ChenJH/Course-Bullying-in-SJTU@main/README.md']
+    rstr=''
+    for url in urls:
+        try:
+            info=urllib.request.urlopen(url,timeout=5).read().decode('utf-8')
+            a=info.find('更新说明')
+            b=0
+            for i in range(50):
+                if info[a-i]=='#':
+                    b=a-i
+                    break
+            c=b+info[b+1:].find('#')
+            d=b+info[b+1:].find('\n')
+            info=info[:d+1]+info[d+2:]
+            rstr=info[b:c].strip()
             break
-    c=b+info[b+1:].find('#')
-    d=b+info[b+1:].find('\n')
-    info=info[:d+1]+info[d+2:]
-    # print(info[b:c].strip())
-    return info[b:c].strip()
-
+            # print(info[b:c].strip())
+        except:continue
+    return rstr
 
 def check_newest_version(old_ver):
     
-    if pl=='win':check_admin()
 
-    # timethread=threading.Thread(target=showtime())
+    # timethread=threading.Thread(target=showtime)
     # timethread.setDaemon(True)
     # timethread.start()
     
@@ -590,10 +598,9 @@ def check_newest_version(old_ver):
     cur_file=head+'-Course-Bullying-in-SJTU-' +current_version.replace('.','_')+end
     old,newtime,new_ver = is_old(old_ver)
     if old:
-        url='https://cdn.jsdelivr.net/gh/Daniel-ChenJH/Course-Bullying-in-SJTU@main/README.md'
-        new_ver_info=get_new_ver_info(url,new_ver.replace('_','.'))
-        newtime = time.strftime("%Y-%m-%d %H:%M:%S ", time.localtime(newtime))
-        a=tkinter.messagebox.askquestion('提示', '发现程序于 '+newtime+' 更新: '+new_ver+' 版，本程序目前为: v'+old_ver[1]+'_'+old_ver[3]+' 版，请问是否下载更新？'+'\n'+new_ver_info)
+        new_ver_info=get_new_ver_info()
+        if newtime:newtime = '于 '+time.strftime("%Y-%m-%d %H:%M:%S ", time.localtime(newtime))
+        a=tkinter.messagebox.askquestion('提示', '发现程序'+newtime+' 更新: '+new_ver+' 版，本程序目前为: v'+old_ver[1]+'_'+old_ver[3]+' 版，请问是否下载更新？'+'\n'+new_ver_info)
         if a=='yes':
             logger.info('下载新版中，耗时大约20秒，请耐心等待......')
             new_file=head+'-Course-Bullying-in-SJTU-' +new_ver+end
@@ -666,6 +673,8 @@ def is_admin():
     except:
         return False
 
+
+if pl=='win':check_admin()
 check_newest_version(current_version)
 check_chrome()
 

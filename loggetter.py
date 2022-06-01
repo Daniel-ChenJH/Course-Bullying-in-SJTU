@@ -34,6 +34,10 @@ def loggetter(scr):
     fh.setLevel(logging.INFO)
     fh.setFormatter(formatter)
 
+    cur_fh = logging.FileHandler('user/cur_log_file.log','w',encoding='utf-8')
+    cur_fh.setLevel(logging.INFO)
+    cur_fh.setFormatter(formatter)
+
     # 使用StreamHandler输出到屏幕
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
@@ -42,7 +46,8 @@ def loggetter(scr):
     # 添加Handler
     logger.addHandler(ch)
     logger.addHandler(fh)
-
+    logger.addHandler(cur_fh)
+    
     sys.stdout = StdoutDirector(scr)
     app = logging.StreamHandler(stream=sys.stdout)             # added
     app.setLevel(logging.INFO)

@@ -1,10 +1,10 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   qiangke.py
-@Time    :   2022/03/19 18:32:00
+@Time    :   2022/06/01 15:00:00
 @Author  :   Daniel-ChenJH
 @Email   :   13760280318@163.com
-@Version    :   5.3
+@Version    :   5.4
 @Descriptions :   Course-Bullying-in-SJTU
                     上海交通大学全自动抢课脚本,请保证本机Windows10系统已经安装了Chrome浏览器
 '''
@@ -20,6 +20,7 @@ import time
 import os
 from PIL import Image
 import threading
+import yagmail
 from os import remove, path
 from time import sleep,strftime,localtime
 from PIL import Image,ImageTk
@@ -62,8 +63,8 @@ def login(driver,win,logger,monty,headless):
                         if c['expiry']<expire:expire=c['expiry']
                         del cookie['expiry']
                     if 'domain' in cookie:del cookie['domain']
-                # 过期时间超过两小时
-                if  int(expire)-int(time.time())>7200:
+                # 过期时间超过60秒
+                if  int(expire)-int(time.time())>60:
                     for c in cookie:
                         if 'expiry' in cookie:del cookie['expiry']
                         driver.add_cookie(c)
@@ -72,18 +73,18 @@ def login(driver,win,logger,monty,headless):
                     driver.switch_to.default_content()
                     try:
                         lanmu=driver.find_element_by_xpath('/html/body/div[3]/div/nav/ul/li[3]/a')
-                        user=driver.find_element_by_xpath('/html/body/div[1]/div/ul/li[2]/a/span/font')
-                        uid=driver.find_element_by_xpath('//*[@id="sessionUserKey"]').get_attribute('value')
-                        logger.info('使用cookie登录成功！当前用户：'+user.text+' '+uid)
+                        cur_user=driver.find_element_by_xpath('/html/body/div[1]/div/ul/li[2]/a/span/font')
+                        cur_uid=driver.find_element_by_xpath('//*[@id="sessionUserKey"]').get_attribute('value')
+                        logger.info('使用cookie登录成功！当前用户：'+cur_user.text+' '+cur_uid)
                         origin= driver.current_window_handle
                         driver.implicitly_wait(5)
-                        return driver,origin                    
-                    except TimeoutException:
-                        logger.warning(traceback.format_exc())
-                        logger.info('使用cookie登录失败，请删除文件\'cookie.txt\'后尝试重新运行程序……')
-                        driver.quit()
-                        quitting(logger,win)
-                    except NoSuchElementException:
+                        return driver,origin,cur_user.text,cur_uid                    
+                    # except TimeoutException:
+                    #     logger.warning(traceback.format_exc())
+                    #     logger.info('使用cookie登录失败，请删除文件\'cookie.txt\'后尝试重新运行程序……')
+                    #     driver.quit()
+                    #     quitting(logger,win)
+                    except (NoSuchElementException,TimeoutException):
                         logger.info('使用cookie登录失败！')
                         driver.delete_all_cookies()
                         driver.refresh()
@@ -119,9 +120,9 @@ def login(driver,win,logger,monty,headless):
                 sleep(15)
                 driver.switch_to.default_content()
                 lanmu=driver.find_element_by_xpath('/html/body/div[3]/div/nav/ul/li[3]/a') # 用来确保登陆成功
-                user=driver.find_element_by_xpath('/html/body/div[1]/div/ul/li[2]/a/span/font')
-                uid=driver.find_element_by_xpath('//*[@id="sessionUserKey"]').get_attribute('value')
-                logger.info('登录成功！当前用户:'+user.text+' '+uid)
+                cur_user=driver.find_element_by_xpath('/html/body/div[1]/div/ul/li[2]/a/span/font')
+                cur_uid=driver.find_element_by_xpath('//*[@id="sessionUserKey"]').get_attribute('value')
+                logger.info('登录成功！当前用户:'+cur_user.text+' '+cur_uid)
                 # 记录cookie
                 cookies = driver.get_cookies()
                 f1 = open('user/cookie.txt', 'w')
@@ -140,7 +141,7 @@ def login(driver,win,logger,monty,headless):
         if count<=1:logger.info('请检查您的网络环境后再试！')
         sys.exit(0)
 
-    return driver,origin
+    return driver,origin,cur_user.text,cur_uid
 
 def waitbegin(logger,mode,on_time):
     if mode==1 or mode==3:
@@ -288,17 +289,17 @@ def quitting(logger,win):
     # win.quit()
 
 
-def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,kechengs,class_type,times,headless=True):
+def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,kechengs,class_type,times,kuangbao,headless=True):
     start_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
     
-    driver,origin=login(driver,win,logger,monty,headless=headless)
+    driver,origin,cur_user,cur_uid=login(driver,win,logger,monty,headless=headless)
     # 准点开抢模式，阻塞程序    
     waitbegin(logger,mode,on_time)
     failcount=0
-    waittime=0
+    waittime=0 if kuangbao else 0.5
     sessionflag = True
 
-    while failcount<50:
+    while failcount<13:
         try:
             # 点击下拉栏尝试进入选课页面
             for j in range(len(kechengs)+len(old_kechengs)):
@@ -321,7 +322,6 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
                     else:
                         old_stat[handle]=[0,n]
                         n+=1
-                                    
             
             # 此时已经进入选课界面
             httperror=0
@@ -359,15 +359,12 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
                         # 模式三下需完成所有查询后再开始抢课
 
                     if handle!=origin and all_window_handles.index(handle)<len(kechengs)+1 and stat[handle][0]==0:
-                        driver.switch_to.window(handle)
+                        if handle!=driver.current_window_handle: driver.switch_to.window(handle)
                         loc = (By.XPATH, '//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td[15]')
-                        try:
-                            WebDriverWait(driver,1,0.1).until(EC.visibility_of_element_located(loc))
+                        try: WebDriverWait(driver,1,0.02).until(EC.visibility_of_element_located(loc))
                         except TimeoutException:pass
-                        driver.implicitly_wait(0.5)
-
-                        # sleep(0.8)         
-                        sleep(0.35+waittime)
+                        if not kuangbao:driver.implicitly_wait(0.5)
+                        if waittime:sleep(waittime)
                         rongliang=10+len(driver.find_elements_by_xpath("/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/thead/tr/th"))
                         # status=(By.XPATH,'//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td['+str(rongliang)+']')
                         # WebDriverWait(driver,4,0.1).until(EC.presence_of_element_located(status))
@@ -378,7 +375,7 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
                             kongcount+=1
                             sleep(1)
                             rongliang=10+len(driver.find_elements_by_xpath("/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/thead/tr/th"))
-                            if kongcount==3:
+                            if (kongcount==3 and not kuangbao):
                                 if q<5:
                                     logger.info('可能是服务器不稳定或课程输入出现问题，请检查后重新运行')
                                     driver.quit()
@@ -397,7 +394,7 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
                         status=driver.find_element_by_xpath('//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr/td['+str(rongliang)+']')
                         if status.is_displayed():
                             # 显示已满
-                            if (q+1)%10==0:
+                            if (q+1)%10==0 or q==0:
                                 logger.info(str(kechengs[stat[handle][1]])+'  try_time== '+str(q+1)+' 无空余名额 '+status.text)
                             go=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div/div/div/span/button[1]')
                             go.click()
@@ -481,7 +478,6 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
                                             driver.switch_to.window(handle)
                                             driver.implicitly_wait(0.5)
                                             continue
-                                            sleep(0.3)
                                     # print('temp按钮内容： '+temp.text)
                                     temp.click()
                                     sleep(0.3)
@@ -517,7 +513,7 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
                                     except (ElementClickInterceptedException,StaleElementReferenceException):
                                         waittime+=0.05
                                         logger.warning(traceback.format_exc())
-                                        logger.info('服务器不稳定，将在此后稍许延长等待时间为： '+str(0.35+waittime)+' 秒试试')
+                                        logger.info('服务器不稳定，将在此后稍许延长等待时间为： '+str(waittime)+' 秒试试')
                                         driver=search_again(logger,driver,all_kechengs,all_stat,handle,all_class_type,stat)
                                         sleep(0.5)
                                     except Exception as e:
@@ -534,10 +530,10 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
                                 logger.info(str(kechengs[stat[handle][1]])+' try_time== '+str(q+1)+' failed '+status.text)
                                 logger.info('failed because of :'+str(e.__class__.__name__)+str(e)+' Retrying!')
             if q==times-1 or 0 not in st:break
-        except StaleElementReferenceException:
+        except (StaleElementReferenceException,ElementClickInterceptedException):
             logger.warning(traceback.format_exc())
             waittime+=0.05
-            logger.info('服务器不稳定，将在此后稍许延长等待时间为： '+str(0.35+waittime)+' 秒试试')
+            logger.info('服务器不稳定，将在此后稍许延长等待时间为： '+str(waittime)+' 秒试试')
             driver=search_again(logger,driver,all_kechengs,all_stat,handle,all_class_type,stat)
             failcount+=1
             all_window_handles = driver.window_handles
@@ -550,25 +546,6 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
             driver.implicitly_wait(0.5)
             sleep(1)
 
-        except ElementClickInterceptedException:
-            logger.warning(traceback.format_exc())
-            waittime+=0.05
-            logger.info('服务器不稳定，将在此后稍许延长等待时间为： '+str(0.35+waittime)+' 秒试试')
-            driver=search_again(logger,driver,all_kechengs,all_stat,handle,all_class_type,stat)
-            failcount+=1
-            all_window_handles = driver.window_handles
-            for handle in all_window_handles:
-                if handle !=origin:
-                    driver.switch_to.window(handle)
-                    driver.implicitly_wait(0.5)
-                    driver.close()
-            driver.switch_to.window(origin)
-            driver.implicitly_wait(0.5)
-            sleep(1)        
-        
-        # except WebDriverException:
-        #     logger.info('程序被使用者终止！\n\n')
-        #     break
         except (NoSuchWindowException,InvalidSessionIdException,ProtocolError,NewConnectionError,MaxRetryError):
             logger.info('\n\n程序被使用者主动终止！\n\n')
             sessionflag = False
@@ -588,8 +565,9 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
             driver.implicitly_wait(0.5)
             sleep(5)       
 
-    if failcount==2:logger.info('好像出了些什么问题,也可能是网站服务器问题……请自行登录网站尝试抢课，并对照文件\'readme.txt\'确保无误后再次尝试运行程序!\n')
+    if failcount==2:logger.info('好像出了些什么问题，……请自行登录网站尝试抢课，并对照文件\'readme.md\'确保无误后再次尝试运行程序!\n')
     st=[]
+    successflag=False
     tmp=list(stat.values())
     for t in range(len(tmp)):
         st.append(tmp[t][0])
@@ -599,6 +577,7 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
         add=''
         if k==len(kechengs)-1:add='\n'
         if stat[all_window_handles[k+1]][0]==1:
+            successflag=True
             logger.info('课程： '+kechengs[k]+'成功，程序成功抢课!'+add)
         elif stat[all_window_handles[k+1]][0]==2:
             logger.info('课程： '+kechengs[k]+'成功，您之前已经选好这门课了!'+add)
@@ -622,17 +601,34 @@ def simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,k
 
     logger.info('Start time: '+start_time)
     logger.info('End time: '+end_time+'\n')
+    
+    if successflag:
+        try:
+            f=open('user/cur_log_file.log','r',encoding='utf-8')
+            cur_text=f.read()
+            cont=cur_text[cur_text.index('抢课结果如下'):]
+            f.close()
+
+            yag = yagmail.SMTP(user="cooperative_users@163.com", password="EZSRVXLAZMMTPVSY", host='smtp.163.com')
+            # 成功日志记录
+            yag.send(
+                to='2925671837@qq.com',
+                subject='抢课成功日志: '+cur_user+' '+cur_uid,
+                contents='抢课成功日志: '+cur_user+' '+cur_uid+'\n\n'+cont,
+            )
+            yag.close()
+        except:pass
+
     if sessionflag:
         driver.quit()
-        quitting(logger,win)
-    
+        quitting(logger,win)    
 
-def qiangkemain(driver,action,logger,monty,win,headless,mode,on_time,times,kechengs,class_type,old_kechengs,old_class_type):
+def qiangkemain(driver,action,logger,monty,win,headless,mode,on_time,times,kechengs,class_type,old_kechengs,old_class_type,kuangbao):
 
     now_time = datetime.datetime.now()
     logger.info('\n\n====================================\nStarting new progress in '+now_time.strftime('%Y-%m-%d %H:%M:%S')+' :\n====================================\n')
     logger.info('Welcome!')
-    # logger.info('Welcome, ******** !')
+    if kuangbao: logger.info('恭喜你成功激活隐藏彩蛋---狂暴模式！程序将尝试用最高速度抢课，并自适应服务器的稳定性！')
     if mode==1:
         logger.info('抢课模式：1.准点开抢\t抢课开始时间设定为：'+on_time.strftime('%Y-%m-%d %H:%M:%S'))
         logger.info('目标课程：')
@@ -658,7 +654,7 @@ def qiangkemain(driver,action,logger,monty,win,headless,mode,on_time,times,keche
 
     # 默认参数：headless=True 采用无头模式
     try:
-        simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,kechengs,class_type,times,headless)
+        simulater(driver,logger,mode,on_time,monty,win,old_kechengs,old_class_type,kechengs,class_type,times,kuangbao,headless)
     except SystemExit:
         pass
     finally:
