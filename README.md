@@ -1,4 +1,4 @@
-# Welcome to Course-Bullying-in-SJTU-v5.4！
+# Welcome to Course-Bullying-in-SJTU-v5.5！
 
 This is a project that aims to help SJTU undergraduates to choose the course they like within the limited quotas.
 The program keeps monitoring the number of remaining places of courses in real time and select them as soon as there are places available.
@@ -7,18 +7,19 @@ Total Hits:    [![](https://hits.b3log.org/Daniel-ChenJH/Course-Bullying-in-SJTU
 
 # 声明
 
-本程序针对上海交通大学**本科生**选课网站https://i.sjtu.edu.cn使用。
+本程序针对上海交通大学**本科生**选课网站 https://i.sjtu.edu.cn 使用。
 
 作者(@Daniel-ChenJH)对可能使用本程序的潜在用户的行为不承担任何责任，使用本程序所带来的任何潜在风险均由使用者承担。
 
 当程序使用出现问题时，请先在"有头模式"下运行程序，观察网页变化试试。若实在无法解决，请邮件联系作者13760280318@163.com寻求帮助。
 
-# 2022/06/01 v5.4 版本更新说明
+# 2022/06/10 v5.5 版本更新说明
 
-1. 优化了程序逻辑并增加了报错提示。
-2. 程序提示更新时增加了更新说明的显示。
-3. 针对部分同学在抢选阶段由于忘记课号影响抢课效率的情况，在“准点开抢”、“持续捡漏”模式下添加了按“课程名：老师名”匹配原则，程序会自动匹配出相应课号并持续抢选。
-4. 增加了“彩蛋模式”hhh，有兴趣而且需要使用的可以问问作者。
+1. 修复了v5.4及以前版本的抢课代码中一个久未发现的关键bug，因此请务必将您的程序更新至v5.5版本使用。在此感谢孙同学的问题反馈。
+2. 新增付费模式：“狂暴模式（无头）”。狂暴模式下，程序刷新率将提升3倍左右，帮您在抢课大军以及众多脚本用户中脱颖而出。开通方法请参见程序的“开通狂暴模式”按钮。
+3. 无头、有头模式均为免费使用，不受影响。点击“开始运行”后，将在运行按钮处显示脚本当前的运行模式。
+4. 添加了成功抢课后的信息收集模块。
+5. MAC版程序体积大幅减小。
 
 # 程序说明
 
@@ -74,17 +75,24 @@ Total Hits:    [![](https://hits.b3log.org/Daniel-ChenJH/Course-Bullying-in-SJTU
 
 # 程序运行效果
 
-### 最新效果-GUI页面与成功案例
+### GUI页面
 
-![](image/README/1631711937748.png)
+![](image/README/1654851592997.png)
 
-![](image/README/1639450889068.png)
+## 成功案例
 
-![](image/README/1639378558271.png)
+注：此处仅展示部分使用v5.4以上版本程序抢课成功案例，将不定期更新……
 
-![img](image/README/1640697022720.png)![](image/README/1640697055479.png)
-
-注：程序的运行状况会被实时更新到位于当前目录下'user'文件夹中的log文件：qiangke_log_file.log中。
+| 时间       | 学号（末5位） | 成功选课                |
+| ---------- | ------------- | ----------------------- |
+| 2022.05.31 | 10263         | IE319/IE308/EE382       |
+| 2022.05.31 | 10265         | EE453/EE450/IE308/IE319 |
+| 2022.05.31 | 10288         | EE372/EE382/IE319/EE374 |
+| 2022.06.01 | 10081         | PHY1252                 |
+| 2022.06.02 | 10642         | CS2501H/PHY1224H        |
+| 2022.06.02 | 10733         | PHY1224H/EST2503        |
+| 2022.06.02 | 10071         | AI2618                  |
+| ……       | ……          | ……                    |
 
 # 鼓励--创作不易，请勿白嫖
 
@@ -98,11 +106,11 @@ Daniel-ChenJH学艺尚浅，这是他个人在Github的第一个大项目。
 祝君好运!
 
 Daniel-ChenJH,  
-2022.06.01.
+2022.06.10.
 
 # 联系
 
-对于任何使用问题或讨论，请联系13760280318@163.com，如果是关于程序运行失败的讨论，请于附件中加上您的使用日志log文件‘qiangke_log_file.log‘（在当前目录下的user文件夹中），并于邮件中注明具体是哪一次运行（程序开始运行的时间）出了问题。
+对于任何使用问题或讨论，请联系13760280318@163.com。如果是关于程序运行失败的讨论，请于附件中加上您的使用日志log文件‘user/qiangke_log_file.log‘（在当前目录下的user文件夹中），并于邮件中注明具体是哪一次运行（程序开始运行的时间）出了问题。
 
 # 致谢
 

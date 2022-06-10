@@ -2,14 +2,15 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   main.py
-@Time    :   2022/06/01 15:00:00
+@Time    :   2022/06/05 15:00:00
 @Author  :   Daniel Chen
-@Version :   5.4
+@Version :   5.5
 @Contact :   13760280318@163.com
 @Description :   Course-Bullying-in-SJTU 客户端GUI顶层实现
 '''
 
-current_version='v5.4'
+current_version = 'v5.5'
+need_admin = True
 
 # Headers to be included:
 import tkinter as tk
@@ -34,9 +35,15 @@ import re
 import urllib
 import zipfile
 import shutil
+# 邮件部分
+import poplib
+import base64
+import binascii
+from email.parser import Parser
+from email.header import decode_header
+import email
 
 from qiangke import qiangkemain
-from qiangkeicons import *
 from ToolTip import createToolTip
 from loggetter import loggetter,scrolltest
 from chrome_checker import chrome_checker
@@ -49,7 +56,8 @@ righttime=False
 global img_png         
 global img_png2        
 global logger
-
+global kuangbao_uid_list
+kuangbao_uid_list=[]
 
 version_re = re.compile(r'^[1-9]\d*\.\d*.\d*')  # 匹配前3位版本号的正则表达式
 
@@ -99,6 +107,101 @@ def save_config():
         f.write(str(retrieve_name(waitbox[i]))+'=='+waitbox[i].get().strip()+'\n')
     f.close()
 
+def decode_str(s):#字符编码转换
+    value, charset = decode_header(s)[0]
+    if charset:
+        value = value.decode(charset)
+    return value
+
+def get_att(msg):
+    attachment_files = []
+    for part in msg.walk():
+        file_name = part.get_filename() # 获取附件名称类型
+        contType = part.get_content_type()
+        if file_name:
+            h = email.header.Header(file_name)
+            dh = email.header.decode_header(h) # 对附件名称进行解码
+            filename = dh[0][0]
+            if dh[0][1]:
+                filename = decode_str(str(filename, dh[0][1])) # 将附件名称可读化
+                # logger.info(filename)
+            # filename = filename.encode("utf-8")
+            data = part.get_payload(decode=True) # 下载附件
+            att_file = open('user/'+filename, 'wb') # 在指定目录下创建文件，注意二进制文件需要用wb模式打开
+            attachment_files.append(filename)
+            att_file.write(data) # 保存附件
+            att_file.close()
+
+    return attachment_files
+
+def email_info_getter(logger,list_only=False):
+    # 返回狂暴模式可用用户名单
+    global kuangbao_uid_list
+    email = "2925671837@qq.com"
+    password = "cfbjygousnendheb"
+    pop3_server = "pop.qq.com"
+    try:
+        server = poplib.POP3(pop3_server,timeout=5)
+        # server.set_debuglevel(1)
+        server.user(email)
+        server.pass_(password)
+        resp, mails, octets = server.list()
+        index = len(mails) #注意索引号从1开始
+        get_kuangbao, get_icons,version_check = False, False, False
+        if os.path.exists(os.path.join(os.getcwd(),'user/icon512.ico')):get_icons=True
+        while index>0:
+            if list_only and get_kuangbao:break
+            if get_icons and get_kuangbao and version_check: break
+            resp, lines, octets = server.retr(index)
+            msg = Parser().parsestr(b'\r\n'.join(lines).decode("utf-8"))
+            if '13760280318@163.com' in str(msg):
+                subject=str(msg).split('Subject:')[-1].strip().split('X-Priority')[0].strip()
+                if (not get_kuangbao) and'KUANGBAO_USERS' in subject: # 狂暴用户获取
+                    origStr=str(msg).split('Content-Transfer-Encoding: base64')[1].strip().split('--')[0].strip()
+                    try:msg_content=base64.b64decode(origStr).decode("utf-8",'ignore')
+                    except binascii.Error:
+                        try:msg_content=base64.b64decode(origStr+'=').decode("utf-8",'ignore')
+                        except binascii.Error:msg_content=base64.b64decode(origStr+'==').decode("utf-8",'ignore')
+                    kuangbao_uid_list=[i.strip() for i in msg_content.strip().split('\n') if i.startswith('5')]
+                    get_kuangbao=True
+                    logger.info("狂暴用户名单获取完成！") if not list_only else logger.info("狂暴用户名单更新完成！")
+                if (not list_only) and (not get_icons) and 'QIANGKEICONS' in subject:   
+                    f_list = get_att(msg)
+                    logger.info("图标文件初始化完成！")
+                    get_icons=True
+
+                # 最低支持版本检测
+                if  (not list_only) and (not version_check) and 'VERSION_IN_SUPPORT' in subject:
+                    origStr=str(msg).split('Content-Transfer-Encoding: base64')[1].strip().split('--')[0].strip()
+                    try:msg_content=base64.b64decode(origStr).decode("utf-8",'ignore')
+                    except binascii.Error:
+                        try:msg_content=base64.b64decode(origStr+'=').decode("utf-8",'ignore')
+                        except binascii.Error:msg_content=base64.b64decode(origStr+'==').decode("utf-8",'ignore')
+                    old_ver=float(current_version.split('v')[1])*10
+                    least_ver=float(msg_content[msg_content.index('.')-1]+msg_content[msg_content.index('.')+1])
+                    # logger.info(least_ver)
+                    version_check=True
+                    if old_ver<least_ver:
+                        logger.info("当前程序版本过低，已不再支持，请自行前往官网https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU下载最新版程序！")
+                        tk.messagebox.showwarning('警告','当前程序版本过低，已不再支持，请自行前往官网https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU下载最新版程序！')
+                        sys.exit(0)
+            index-=1
+        server.quit()
+    except SystemExit:
+        sys.exit(0)
+    except:pass
+    if not kuangbao_uid_list:
+        logger.info("程序图标文件或狂暴用户名单获取失败！请确认您的网络环境正常后重试！")
+        tk.messagebox.showwarning('警告','程序图标文件或狂暴用户名单获取失败！请确认您的网络环境正常后重试！')
+
+    return kuangbao_uid_list
+
+def show_kuangbao_messagebox():
+    global kuangbao_uid_list
+    kuangbao_uid_list=email_info_getter(logger,list_only=True)
+    tk.messagebox.showinfo('开通狂暴模式','开通狂暴模式即可享受3倍抢课速度！\n如需使用，请扫描程序中的“打赏作者”付款码，\n添加备注 "开通抢课狂暴模式-您的学号" 并支付10.00元！\n学号将是您使用狂暴模式的唯一凭证！\n使用中若出现任何问题，请邮件联系作者！')
+
+
 class MyThread(threading.Thread):
   def __init__(self,action=None,logger=None,win=None,monty=None,headless=None,mode=None,on_time=None,times=None,kechengs=None,class_type=None,old_kechengs=None,old_class_type=None):
     threading.Thread.__init__(self)
@@ -117,6 +220,7 @@ class MyThread(threading.Thread):
     self.old_kechengs=old_kechengs
     self.old_class_type=old_class_type
     self.caidan=False
+    self.kuangbao_uid_list=[]
     self.driver=None
       
   def run(self):
@@ -139,7 +243,7 @@ class MyThread(threading.Thread):
     elif pl=='mac':self.driver = webdriver.Chrome(options=option,executable_path=os.path.join(os.getcwd(),'user/chromedriver'))
     self.driver.set_page_load_timeout(5)
 
-    qiangkemain(self.driver,self.action,self.logger,self.win,self.monty,self.headless,self.mode,self.on_time,self.times,self.kechengs,self.class_type,self.old_kechengs,self.old_class_type,self.caidan)
+    qiangkemain(self.driver,self.action,self.logger,self.win,self.monty,self.headless,self.mode,self.on_time,self.times,self.kechengs,self.class_type,self.old_kechengs,self.old_class_type,self.caidan,self.kuangbao_uid_list)
    
   def setFlag(self,parm):     #外部停止线程的操作函数
     self.Flag=parm #boolean
@@ -254,6 +358,7 @@ def clickMe():
     q.put(qiangkethread)
 
     global righttime
+    global kuangbao_uid_list
 
     qiangkethread.action=action
     qiangkethread.logger=logger
@@ -267,11 +372,11 @@ def clickMe():
     qiangkethread.class_type=class_type
     qiangkethread.old_kechengs=old_kechengs
     qiangkethread.old_class_type=old_class_type
-    qiangkethread.caidan=True if (times==149248 and mode!=3 and '彩蛋' in head) else False
+    qiangkethread.caidan=False if '无头模式' in head else True
+    qiangkethread.kuangbao_uid_list=kuangbao_uid_list
 
     qiangkethread.start()
     # print(qiangkethread.is_alive())   
-    if qiangkethread.caidan: action.configure(text='狂暴模式运行中')
     action3.configure(state='enabled')    # Disable the Button Widget
 
 def stop_qiangke():
@@ -301,17 +406,13 @@ def get_webservertime():
     ts=  r.getheader('date') #获取http头date部分
     #将GMT时间转换成北京时间
     ltime= time.strptime(ts[5:25], "%d %b %Y %H:%M:%S")
-    # print(ltime)
     ttime=time.localtime(time.mktime(ltime)+8*60*60)
-    # print(ttime)
     dat="date %u-%02u-%02u"%(ttime.tm_year,ttime.tm_mon,ttime.tm_mday)
     tm="time %02u:%02u:%02u"%(ttime.tm_hour,ttime.tm_min,ttime.tm_sec)
-    # print (dat,tm)
     os.system(dat)
     os.system(tm)
     logger.info('系统时间校准成功!当前时间为：'+str(datetime.datetime.now())[:-7])
     righttime=True
-    # input()
 
 # Create instance
 win = tk.Tk()   
@@ -320,6 +421,7 @@ win.title("Course-Bullying-in-SJTU")
 
 # Disable resizing the GUI
 win.resizable(0,0)
+
 # Tab Control introduced here --------------------------------------
 tabControl = ttk.Notebook(win)          # Create Tab Control
 tabControl.pack(expand=1, fill="both")  # Pack to make visible
@@ -330,6 +432,7 @@ monty.pack(expand=1,fill="both")
 # Modified Button Click Function
 
 def add_pic():
+    win.iconbitmap("user/icon512.ico") 
     if os.path.exists('user/icon256.ico'):
         Img2=Image.open('user/paycode.png')
         global img_png2
@@ -355,7 +458,7 @@ starttimeEntered = ttk.Entry(monty, width=width, textvariable=starttime)
 starttimeEntered.grid(column=0, row=1, sticky='W')
 # Adding a Textbox Entry widget
 
-ttk.Label(monty, text="在下面输入目标课程信息，\n若有多余位置留空即可\n左侧填写课程名称或课号，\n右侧填写对应课程类别").grid(column=0, row=2, sticky='W')
+ttk.Label(monty, text="在下面输入目标课程信息，\n若有多余位置留空即可\n左侧填写课程名称或课号，\n若忘记课号也可填入'课程名-老师名'\n右侧填写对应课程类别!").grid(column=0, row=2, sticky='W')
 class1 = tk.StringVar()
 class1Entered = ttk.Entry(monty, width=width, textvariable=class1)
 class1Entered.grid(column=0, row=3, sticky='W')
@@ -390,7 +493,7 @@ maxtimeEntered.grid(column=1, row=1, sticky='W')
 # Adding a Combobox
 look = tk.StringVar()
 lookChosen = ttk.Combobox(monty, width=14, textvariable=look)
-lookChosen['values'] = ('无头模式(默认)', '有头模式(开发者)','彩蛋模式(狗头)')
+lookChosen['values'] = ('无头模式(默认)', '狂暴模式(无头)','有头模式(开发者)')
 lookChosen.grid(column=2, row=2)
 lookChosen.current(0)  #设置初始显示值，值为元组['values']的下标
 lookChosen.config(state='readonly')  #设为只读模式
@@ -405,7 +508,7 @@ moChosen.grid(column=2, row=1)
 moChosen.current(0)  #设置初始显示值，值为元组['values']的下标
 moChosen.config(state='readonly')  #设为只读模式
 
-ttk.Label(font=('楷体 13 bold'),text="Welcome to Course-Bullying-in-SJTU! 本程序为上海交通大学本科生全自动抢课脚本！\nAuthor：@Daniel-ChenJH, 邮箱: 13760280318@163.com, 程序版本"+current_version+"。\n使用请严格遵守法律法规与学校规章制度，本人对本程序潜在使用者的行为不负任何责任！\n检查版本更新地址：https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU\n国内同步镜像：https://gitee.com/Daniel-ChenJH/Course-Bullying-in-SJTU")\
+ttk.Label(font=('楷体 13 bold'),text="Welcome to Course-Bullying-in-SJTU! 本程序为上海交通大学本科生全自动抢课脚本！\nAuthor：@Daniel-ChenJH, 邮箱: 13760280318@163.com, 程序版本"+current_version+"。\n狂暴模式下程序的刷新率为普通模式下刷新率的3倍，如需使用请点击'开通狂暴模式'！\n使用请严格遵守法律法规与学校规章制度，本人对本程序潜在使用者的行为不负任何责任！\n检查版本更新地址：https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU")\
     .pack(anchor='center',padx=0, pady=1,fill='none', expand='yes', side='bottom')
 # Using a scrolled Text control    
 scrolW  = 60; scrolH  =  19
@@ -423,6 +526,8 @@ action3 = ttk.Button(monty,text="终止本次运行",width=18,command=stop_qiang
 action3.grid(column=2,row=5,rowspan=1,ipady=5)
 action3.configure(state='disabled')    # Disable the Button Widget
 
+action4 = ttk.Button(monty,text="开通狂暴模式",width=18,command=show_kuangbao_messagebox)   
+action4.grid(column=2,row=6,rowspan=1,ipady=5)
 
 if not os.path.exists('user'):os.mkdir('user')
 
@@ -450,24 +555,7 @@ for child in monty.winfo_children():
 
 waitbox=[starttime,maxtime,mo,look,class1,class2,class3,class4,cate1,cate2,cate3,cate4]
 
-# 程序图标信息 256
-
-
-def setIcon():
-    tmp = open("user/icon512.ico","wb+")  
-    tmp.write(base64.b64decode(Icon512()))
-    tmp.close()
-    tmp = open("user/icon256.ico","wb+")  
-    tmp.write(base64.b64decode(Icon256()))
-    tmp.close()    
-    tmp = open("user/paycode.png","wb+")  
-    tmp.write(base64.b64decode(paycode()))
-    tmp.close()
-    win.iconbitmap("user/icon512.ico") 
-    # os.remove("user/icon512.ico")
-
 def check_chrome():
-
     f=open("user/conf.ini",'w',encoding='utf-8')
     if pl=='win':f.write('[driver]\nabsPath=user\chromedriver.exe\nurl=https://chromedriver.storage.googleapis.com/')
     elif pl=='mac':f.write('[driver]\nabsPath=user/chromedriver\nurl=https://chromedriver.storage.googleapis.com/')
@@ -483,10 +571,7 @@ def check_chrome():
         action.configure(text='无法运行')
         action.configure(state='disabled')    # Disable the Button Widget
         tk.messagebox.showwarning('警告',cstr[int(c.exp)-1])
-
-    setIcon()
-    add_pic()
-    if not c.exp:logger.info('前期准备工作完成！')
+    else:logger.info('Chrome及其驱动检查通过！')
 
 
 def is_old(old_ver):
@@ -532,11 +617,12 @@ def request_big_data(url):
     name = url.split('/')[-1]
     # 获取文件名
     try:
-        try:size=int(urllib.request.urlopen(url,timeout=5).headers['content-length'])/1024
-        except:size=12110 if pl=='win' else 29400
+        try:size=round(int(urllib.request.urlopen(url,timeout=5).length)/1024/1024,2)
+        except:size=16.36 if pl=='win' else 29.40
         finally:
-            logger.info('更新中，文件大小： '+str(round(size/1024,2))+' MB')
+            logger.info('更新中，文件大小： '+str(size)+' MB')
             r = requests.get(url, stream=True,timeout=10)
+            tmplist=[int((size*1024/2.5))*i for i in list(range(6))]
             # stream=True 设置为流读取
             with open("new-"+str(name), "wb") as pdf:
                 i=0
@@ -545,7 +631,7 @@ def request_big_data(url):
                     # 每2048个字节为一块进行读取
                     if chunk:
                         # 如果chunk不为空
-                        if i%2400==0: process_bar(i/2,int(size), '更新进度', auto_rm=True)
+                        if i in tmplist: process_bar(round(i/2/1024,2),size, '更新进度', auto_rm=True)
                         pdf.write(chunk)
                         i=i+1
             logger.info('更新用时（秒）：'+str(round(time.time()-a,2)))
@@ -583,7 +669,6 @@ def get_new_ver_info():
 
 def check_newest_version(old_ver):
     
-
     # timethread=threading.Thread(target=showtime)
     # timethread.setDaemon(True)
     # timethread.start()
@@ -674,10 +759,18 @@ def is_admin():
         return False
 
 
-if pl=='win':check_admin()
-check_newest_version(current_version)
-check_chrome()
 
+# 主程序
+if need_admin and pl=='win':check_admin()
+# chrome及chromedriver检测
+check_chrome()
+# 程序图标获取、狂暴用户列表获取与最低支持版本检测
+kuangbao_uid_list=email_info_getter(logger,list_only=False)
+# 加载程序所用图标
+add_pic()
+# 检查版本更新
+check_newest_version(current_version)
+# 加载已有配置文件
 load_config()
 
 # Place cursor into starttime Entry
