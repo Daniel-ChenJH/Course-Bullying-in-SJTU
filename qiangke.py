@@ -256,7 +256,7 @@ def search_in(logger,win,driver,mode,kechengs,stat,handle,class_type,new):
             return driver,classfind,stat,kechengs,num_bias    
     
     # 此处教学信息服务网的列表栏序号对应：
-    # 12课号13老师14时间15地点16学院17备注18归属19性质20学期21模式22语言23选课情况24按钮
+    # 12课号13老师14时间15地点16学院17备注18性质19模式20语言21已满22已选/容量23未知24按钮
     # 2022.06.10
 
     #带:号的老师检索
@@ -294,7 +294,7 @@ def search_in(logger,win,driver,mode,kechengs,stat,handle,class_type,new):
                 if str(cur_class) == str(class_label.text).split(')')[1][1:].strip():  # '(2022-2023-1)-MARX1205-3' 需要完全一致
                     num_bias=i
                     break       
-        logger.info(str(num_bias)+str(cur_class))
+        # logger.info(str(num_bias)+str(cur_class))
     
     return driver,classfind,stat,kechengs,num_bias
 
@@ -304,7 +304,7 @@ def search_again(logger,driver,kechengs,stat,handle,class_type,new):
     else:bias=len(new)
     driver.refresh()
     sleep(1)
-    driver.implicitly_wait(5)
+    driver.implicitly_wait(0.5)
     inp=driver.find_element_by_xpath('//*[@id="searchBox"]/div/div[1]/div/div/div/div/input')
     inp.clear()
     inp.send_keys(kechengs[stat[handle][1]+bias])
@@ -324,7 +324,7 @@ def search_again(logger,driver,kechengs,stat,handle,class_type,new):
             except TimeoutException:pass
             driver.implicitly_wait(3)
             break
-    sleep(1)
+    sleep(0.3)
     return driver
 
 def quitting(logger,win):
@@ -434,6 +434,7 @@ def simulater(action,driver,logger,mode,on_time,monty,win,old_kechengs,old_class
                         if waittime:sleep(waittime)
                         # 这个bias是10，不能改
                         rongliang=10+len(driver.find_elements_by_xpath("/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/thead/tr/th"))
+                        # logger.info(rongliang)
                         kongcount=0
                         # 检查服务器情况并尝试等待
                         whileflag=False
@@ -457,10 +458,10 @@ def simulater(action,driver,logger,mode,on_time,monty,win,old_kechengs,old_class
                                     continue
                         
                         if whileflag:continue
-                        # 应该是下面这样没错的，有待2022.9月再检查一下
                         status_check_xpath='//html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(num_bias_list[stat[handle][1]])+']/td['+str(rongliang)+']'
-                        xuan_btn_here='/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(num_bias_list[stat[handle][1]])+']/td['+str(rongliang+1)+']/button'
-                        tuixuan_btn_here='/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(num_bias_list[stat[handle][1]+len(kechengs)])+']/td['+str(rongliang+1)+']/button'
+                        # logger.info(status_check_xpath)
+                        xuan_btn_here='/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(num_bias_list[stat[handle][1]])+']/td['+str(rongliang+3)+']/button'
+                        if mode==3:tuixuan_btn_here='/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(num_bias_list[stat[handle][1]+len(kechengs)])+']/td['+str(rongliang+3)+']/button'
                         
                         status=driver.find_element_by_xpath(status_check_xpath)
                         if status.is_displayed():
@@ -518,16 +519,10 @@ def simulater(action,driver,logger,mode,on_time,monty,win,old_kechengs,old_class
                                                 driver.switch_to.window(handle)
                                                 driver.implicitly_wait(0.5)
 
-                                                # 规避网页防爬策略
-                                                ### 此处是出于保险考虑，防止出现“假选课”情况
-                                                # 2022.06.10
-                                                # 此处换回来直接点一下查询按钮，就不刷新了，加大换课概率
-                                                # driver=search_again(logger,driver,all_kechengs,all_stat,handle,all_class_type,stat)
-                                                sleep(0.1)
-                                                go=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[2]/div/div[1]/div/div/div/div/span/button[1]')
-                                                go.click()
-                                                sleep(0.3)
-                                                ### 此处是出于保险考虑，防止出现“假选课”情况
+                                                ### 此处必须刷新网页缓存，删不了
+                                                # 2022.06.20
+                                                driver=search_again(logger,driver,all_kechengs,all_stat,handle,all_class_type,stat)
+                                                ### 防止出现“假选课”情况
                                                 
                                                 try:WebDriverWait(driver,1,0.1).until(EC.text_to_be_present_in_element((By.XPATH, xuan_btn_here),"选课"))
                                                 except:pass
@@ -556,6 +551,7 @@ def simulater(action,driver,logger,mode,on_time,monty,win,old_kechengs,old_class
                                             continue
                                     # print('temp按钮内容： '+temp.text)
                                     temp.click()
+                                    logger.info('点击选课！')
                                     sleep(0.3)
                                     driver.implicitly_wait(2)
                                     try:WebDriverWait(driver,1,0.1).until(EC.text_to_be_present_in_element((By.XPATH, xuan_btn_here),"退选"))
