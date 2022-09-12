@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   qiangke.py
-@Time    :   2022/06/05 15:00:00
+@Time    :   2022/09/12 12:00:00
 @Author  :   Daniel-ChenJH
 @Email   :   13760280318@163.com
 @Version    :   5.5
@@ -351,11 +351,16 @@ def simulater(action,driver,logger,mode,on_time,monty,win,old_kechengs,old_class
         action.configure(text='狂暴模式运行中')
         action.configure(state='disabled')
         logger.info('尊敬的'+cur_user+' '+cur_uid+'，'+'恭喜您成功激活狂暴模式！程序将尝试用最高速度抢课，并自适应服务器的稳定性！')
+        logger.info('最大刷新次数设定为： '+str(times))
+
     else:
         action.configure(text='普通模式运行中')
-        tk.messagebox.showinfo('抢课模式提示','当前运行于普通模式，开通狂暴模式即可享受3倍抢课速度！\n点击"确定"继续运行本程序！')
-        logger.info('当前运行于普通模式，开通狂暴模式即可享受3倍抢课速度！')
+        if times>1000: times=1000
+        logger.info('最大刷新次数设定为： '+str(times))
+        logger.info('当前运行于普通模式，开通狂暴模式即可解锁最大刷新次数的上限值以及享受3倍抢课速度！')
+        tk.messagebox.showinfo('抢课模式提示','当前运行于普通模式，开通狂暴模式即可解锁最大刷新次数的\n上限值以及享受3倍抢课速度！\n当前最大刷新次数设定为： '+str(times)+'！\n点击"确定"继续运行本程序！')
     # 准点开抢模式，阻塞程序    
+
     waitbegin(logger,mode,on_time)
     failcount=0
     waittime=0 if kuangbao else 0.7
@@ -728,7 +733,6 @@ def qiangkemain(driver,action,logger,monty,win,headless,mode,on_time,times,keche
             if i==len(kechengs)-1:add='\n'
             else:add=''
             logger.info(old_kechengs[i]+','+old_class_type[i]+' >>> '+kechengs[i]+','+class_type[i]+add)
-    logger.info('最大刷新次数设定为： '+str(times))
 
     # 默认参数：headless=True 采用无头模式
     try:
