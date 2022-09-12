@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   main.py
-@Time    :   2022/06/05 15:00:00
+@Time    :   2022/09/12 12:00:00
 @Author  :   Daniel Chen
 @Version :   5.5
 @Contact :   13760280318@163.com
@@ -11,7 +11,6 @@
 
 current_version = 'v5.5'
 need_admin = True
-
 # Headers to be included:
 import tkinter as tk
 from tkinter import ttk
@@ -93,7 +92,7 @@ def isChinese(word):
 def load_config():
     if not os.path.exists('user/config.ini'):
         starttime.set('2022-06-01 00:00:00')
-        maxtime.set('100000')
+        maxtime.set('1000')
     else:
         f=open('user/config.ini','r',encoding='utf-8')
         data = f.readlines()
@@ -150,6 +149,7 @@ def email_info_getter(logger,list_only=False):
         get_kuangbao, get_icons,version_check = False, False, False
         if os.path.exists(os.path.join(os.getcwd(),'user/icon512.ico')):get_icons=True
         while index>0:
+            if list_only:lookChosen.set('狂暴模式(无头)')
             if list_only and get_kuangbao:break
             if get_icons and get_kuangbao and version_check: break
             resp, lines, octets = server.retr(index)
@@ -164,6 +164,7 @@ def email_info_getter(logger,list_only=False):
                         except binascii.Error:msg_content=base64.b64decode(origStr+'==').decode("utf-8",'ignore')
                     kuangbao_uid_list=[i.strip() for i in msg_content.strip().split('\n') if i.startswith('5')]
                     get_kuangbao=True
+                    # logger.info(kuangbao_uid_list)
                     logger.info("狂暴用户名单获取完成！") if not list_only else logger.info("狂暴用户名单更新完成！")
                 if (not list_only) and (not get_icons) and 'QIANGKEICONS' in subject:   
                     f_list = get_att(msg)
@@ -182,9 +183,10 @@ def email_info_getter(logger,list_only=False):
                     # logger.info(least_ver)
                     version_check=True
                     if old_ver<least_ver:
-                        logger.info("当前程序版本过低，已不再支持，请自行前往官网https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU下载最新版程序！")
-                        tk.messagebox.showwarning('警告','当前程序版本过低，已不再支持，请自行前往官网https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU下载最新版程序！')
-                        sys.exit(0)
+                        logger.info("当前程序版本"+current_version+"过低，已不再支持，请前往官网https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU下载最新版程序！")
+                        action.configure(state='disabled')
+                        action.configure(text='当前程序版本不再支持')
+                        tk.messagebox.showwarning('警告','当前程序版本'+current_version+'过低，已不再支持，请前往官网https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU下载最新版程序！')
             index-=1
         server.quit()
     except SystemExit:
@@ -199,7 +201,7 @@ def email_info_getter(logger,list_only=False):
 def show_kuangbao_messagebox():
     global kuangbao_uid_list
     kuangbao_uid_list=email_info_getter(logger,list_only=True)
-    tk.messagebox.showinfo('开通狂暴模式','开通狂暴模式即可享受3倍抢课速度！\n如需使用，请扫描程序中的“打赏作者”付款码，\n添加备注 "开通抢课狂暴模式-您的学号" 并支付10.00元！\n学号将是您使用狂暴模式的唯一凭证！\n使用中若出现任何问题，请邮件联系作者！')
+    tk.messagebox.showinfo('开通狂暴模式','开通狂暴模式即可解锁最大刷新次数的上限值以及享受3倍抢课速度！\n如需使用，请扫描程序中的“打赏作者”付款码，\n添加备注 "开通抢课狂暴模式-您的学号" 并支付10.00元！\n学号将是您使用狂暴模式的唯一凭证！\n使用中若出现任何问题，请邮件联系作者！')
 
 
 class MyThread(threading.Thread):
@@ -313,7 +315,7 @@ def clickMe():
             action.configure(text="确认配置并开始运行")
             action.configure(state='enabled')    # Disable the Button Widget
             return
-    else:times=100000
+    else:times=1000
     head=look.get().strip()
     if '有头' in head:headless=False
     else:headless=True
@@ -409,8 +411,8 @@ def get_webservertime():
     ttime=time.localtime(time.mktime(ltime)+8*60*60)
     dat="date %u-%02u-%02u"%(ttime.tm_year,ttime.tm_mon,ttime.tm_mday)
     tm="time %02u:%02u:%02u"%(ttime.tm_hour,ttime.tm_min,ttime.tm_sec)
-    os.system(dat)
     os.system(tm)
+    os.system(dat)
     logger.info('系统时间校准成功!当前时间为：'+str(datetime.datetime.now())[:-7])
     righttime=True
 
@@ -485,7 +487,7 @@ cate4 = tk.StringVar()
 cate4Entered = ttk.Entry(monty, width=width, textvariable=cate4)
 cate4Entered.grid(column=1, row=6, sticky='W')
 
-ttk.Label(monty, text="输入最大刷新次数：（默认为100000）").grid(column=1, row=0, sticky='W')
+ttk.Label(monty, text="输入最大刷新次数：（普通模式上限为1000）\n开通狂暴模式即可解锁上限！").grid(column=1, row=0, sticky='W')
 maxtime = tk.StringVar()
 maxtimeEntered = ttk.Entry(monty, width=width, textvariable=maxtime)
 maxtimeEntered.grid(column=1, row=1, sticky='W')
@@ -498,7 +500,7 @@ lookChosen.grid(column=2, row=2)
 lookChosen.current(0)  #设置初始显示值，值为元组['values']的下标
 lookChosen.config(state='readonly')  #设为只读模式
 
-ttk.Label(monty, text="请选择抢课模式:").grid(column=2, row=0,sticky='W')
+ttk.Label(monty, text="请选择抢课模式与策略:").grid(column=2, row=0,sticky='W')
  
 # Adding a Combobox
 mo = tk.StringVar()
@@ -508,7 +510,7 @@ moChosen.grid(column=2, row=1)
 moChosen.current(0)  #设置初始显示值，值为元组['values']的下标
 moChosen.config(state='readonly')  #设为只读模式
 
-ttk.Label(font=('楷体 13 bold'),text="Welcome to Course-Bullying-in-SJTU! 本程序为上海交通大学本科生全自动抢课脚本！\nAuthor：@Daniel-ChenJH, 邮箱: 13760280318@163.com, 程序版本"+current_version+"。\n狂暴模式下程序的刷新率为普通模式下刷新率的3倍，如需使用请点击'开通狂暴模式'！\n使用请严格遵守法律法规与学校规章制度，本人对本程序潜在使用者的行为不负任何责任！\n检查版本更新地址：https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU")\
+ttk.Label(font=('楷体 13 bold'),text="Welcome to Course-Bullying-in-SJTU! 本程序为上海交通大学本科生全自动抢课脚本！\nAuthor：@Daniel-ChenJH, 邮箱: 13760280318@163.com, 程序版本"+current_version+"。\n狂暴模式下解锁刷新次数限制且刷新率提高3倍，如需使用请点击'开通狂暴模式'！\n使用请严格遵守法律法规与学校规章制度，本人对本程序潜在使用者的行为不负任何责任！\n检查版本更新地址：https://github.com/Daniel-ChenJH/Course-Bullying-in-SJTU")\
     .pack(anchor='center',padx=0, pady=1,fill='none', expand='yes', side='bottom')
 # Using a scrolled Text control    
 scrolW  = 60; scrolH  =  19
@@ -673,7 +675,7 @@ def check_newest_version(old_ver):
     # timethread.setDaemon(True)
     # timethread.start()
     
-    ttk.Label(monty, text="请注意，若选择替换抢课模式，则请按照希望把\n第二行替换成第一行、希望把第四行替换\n成第三行的顺序正确填写！\n请务必在初次使用前校准时间\nMac系统需自行调整系统时间！").grid(column=1, row=2, sticky='W')
+    ttk.Label(monty, text="请注意，若选择替换抢课模式，则请按照希望把\n第二行替换成第一行、希望把第四行替换\n成第三行的顺序正确填写！\n请务必在初次使用前校准时间\nMac系统需自行校准时间！").grid(column=1, row=2, sticky='W')
     if pl=='mac':
         head='MAC' 
         end='.dmg'
