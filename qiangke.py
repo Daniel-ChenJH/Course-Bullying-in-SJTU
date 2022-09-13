@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   qiangke.py
-@Time    :   2022/09/12 12:00:00
+@Time    :   2022/09/13 21:00:00
 @Author  :   Daniel-ChenJH
 @Email   :   13760280318@163.com
 @Version    :   5.5
@@ -162,6 +162,11 @@ def login(driver,win,logger,monty):
                 logger.info('登录失败，请扫码新弹出的二维码重试！若二维码一段时间后仍未弹出，请检查你的网络环境后重新运行程序！')
                 driver.refresh()
                 sleep(1)
+            except Exception as e:
+                logger.info('获取二维码失败，请关闭VPN并检查你的网络环境后重试！')
+                driver.quit()
+                quitting(logger,win)
+                sys.exit(0)
 
         origin= driver.current_window_handle
         driver.implicitly_wait(5)
@@ -278,19 +283,25 @@ def search_in(logger,win,driver,mode,kechengs,stat,handle,class_type,new):
 
     num_bias=1
     if not isChinese(cur_class):
+        sleep(0.1)
         # 是课号检索
         cur_class=cur_class.split(')')[1][1:].strip() if ')' in cur_class else cur_class # 去掉课号中的学期部分
         if '-' in cur_class: # 是带尾号的精确课号检索
             total_classes=len(driver.find_elements_by_xpath('/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr'))
+            # logger.info('本课号下课程数目: %d', total_classes)
             for i in range(1,total_classes+1):
                 # xpath='/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(i)+']/td[12]'
-                xpath = (By.XPATH, '/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(i)+']/td[12]')
-                try:
-                    WebDriverWait(driver,1,0.1).until(EC.visibility_of_element_located(xpath))
-                    driver.implicitly_wait(3)
-                except TimeoutException:pass
-                class_label=driver.find_element_by_xpath('/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(i)+']/td[12]')
-                logger.info(class_label.text)
+                xpath_class_label = '/html/body/div[1]/div/div/div[5]/div/div[2]/div[1]/div[2]/table/tbody/tr['+str(i)+']/td[12]'
+                try:WebDriverWait(driver,1,0.1).until(EC.text_to_be_present_in_element((By.XPATH, xpath_class_label),"-"))
+                except TimeoutException:
+                    try:WebDriverWait(driver,1,0.1).until(EC.text_to_be_present_in_element((By.XPATH, xpath_class_label),"-"))   
+                    except TimeoutException:sleep(1)            
+                class_label=driver.find_element_by_xpath(xpath_class_label)
+                if not str(class_label.text).strip():
+                    logger.info('目标课号下课程数目: %d', total_classes)
+                    logger.info('服务器获取不到本课程课号！请检查您的网络环境！')
+                else:logger.info('获取到课程：'+str(class_label.text))
+
                 if str(cur_class) == str(class_label.text).split(')')[1][1:].strip():  # '(2022-2023-1)-MARX1205-3' 需要完全一致
                     num_bias=i
                     break       
