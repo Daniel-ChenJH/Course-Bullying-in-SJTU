@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 '''
 @File    :   main.py
-@Time    :   2022/09/12 12:00:00
+@Time    :   2022/09/13 21:00:00
 @Author  :   Daniel Chen
 @Version :   5.5
 @Contact :   13760280318@163.com
@@ -147,17 +147,21 @@ def email_info_getter(logger,list_only=False):
         resp, mails, octets = server.list()
         index = len(mails) #注意索引号从1开始
         get_kuangbao, get_icons,version_check = False, False, False
+        if list_only:
+            lookChosen.set('狂暴模式(无头)')
+            version_check=True
         if os.path.exists(os.path.join(os.getcwd(),'user/icon512.ico')):get_icons=True
         while index>0:
-            if list_only:lookChosen.set('狂暴模式(无头)')
             if list_only and get_kuangbao:break
             if get_icons and get_kuangbao and version_check: break
             resp, lines, octets = server.retr(index)
-            msg = Parser().parsestr(b'\r\n'.join(lines).decode("utf-8"))
-            if '13760280318@163.com' in str(msg):
-                subject=str(msg).split('Subject:')[-1].strip().split('X-Priority')[0].strip()
+            if b'From: Daniel-ChenJH <13760280318@163.com>' in lines:
+                # 是目标邮件才解码，节约时间
+                msg = Parser().parsestr(b'\r\n'.join(lines).decode("utf-8"))
+                str_msg=str(msg)
+                subject=str_msg.split('Subject:')[-1].strip().split('X-Priority')[0].strip()
                 if (not get_kuangbao) and'KUANGBAO_USERS' in subject: # 狂暴用户获取
-                    origStr=str(msg).split('Content-Transfer-Encoding: base64')[1].strip().split('--')[0].strip()
+                    origStr=str_msg.split('Content-Transfer-Encoding: base64')[1].strip().split('--')[0].strip()
                     try:msg_content=base64.b64decode(origStr).decode("utf-8",'ignore')
                     except binascii.Error:
                         try:msg_content=base64.b64decode(origStr+'=').decode("utf-8",'ignore')
@@ -170,10 +174,9 @@ def email_info_getter(logger,list_only=False):
                     f_list = get_att(msg)
                     logger.info("图标文件初始化完成！")
                     get_icons=True
-
                 # 最低支持版本检测
-                if  (not list_only) and (not version_check) and 'VERSION_IN_SUPPORT' in subject:
-                    origStr=str(msg).split('Content-Transfer-Encoding: base64')[1].strip().split('--')[0].strip()
+                if (not list_only) and (not version_check) and 'VERSION_IN_SUPPORT' in subject:
+                    origStr=str_msg.split('Content-Transfer-Encoding: base64')[1].strip().split('--')[0].strip()
                     try:msg_content=base64.b64decode(origStr).decode("utf-8",'ignore')
                     except binascii.Error:
                         try:msg_content=base64.b64decode(origStr+'=').decode("utf-8",'ignore')
@@ -201,7 +204,7 @@ def email_info_getter(logger,list_only=False):
 def show_kuangbao_messagebox():
     global kuangbao_uid_list
     kuangbao_uid_list=email_info_getter(logger,list_only=True)
-    tk.messagebox.showinfo('开通狂暴模式','开通狂暴模式即可解锁最大刷新次数的上限值以及享受3倍抢课速度！\n如需使用，请扫描程序中的“打赏作者”付款码，\n添加备注 "开通抢课狂暴模式-您的学号" 并支付10.00元！\n学号将是您使用狂暴模式的唯一凭证！\n使用中若出现任何问题，请邮件联系作者！')
+    tk.messagebox.showinfo('开通狂暴模式','开通狂暴模式即可解锁最大刷新次数的上限值以及享受3倍抢课速度！\n如需使用，请扫描程序中的“打赏作者”付款码，\n添加备注 "开通抢课狂暴模式-您的学号" 并支付10.00元！\n学号将是您使用狂暴模式的唯一凭证！\n使用中若出现任何问题，请邮件联系作者！\n狂暴用户名单更新完成！')
 
 
 class MyThread(threading.Thread):
